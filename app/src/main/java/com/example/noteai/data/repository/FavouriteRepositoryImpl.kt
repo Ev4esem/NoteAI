@@ -1,27 +1,34 @@
 package com.example.noteai.data.repository
 
-import com.example.noteai.data.local.db.FavouriteNotesDao
+import com.example.noteai.data.mapper.toDbModel
+import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.FavouriteRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FavouriteRepositoryImpl @Inject constructor(
-    private val favouriteNotesDao: FavouriteNotesDao
+    private val noteDao: NoteDao
 ) : FavouriteRepository {
 
     override val favouriteNotes: Flow<List<Note>>
-        get() = TODO("Not yet implemented")
+        get() = noteDao.getFavouriteNotes()
+            .map { notesDb -> notesDb.map { it.toDomain() } }
 
     override fun observeIsFavourite(noteId: Int): Flow<Boolean> {
-        return favouriteNotesDao.observeIsFavourite(noteId)
+        return noteDao.observeIsFavourite(noteId)
     }
 
     override suspend fun addToFavourite(note: Note) {
-        TODO("Not yet implemented")
+        val updatedNote = note.copy(isFavorite = true)
+        noteDao.addToFavourite(updatedNote.toDbModel())
     }
 
     override suspend fun removeFromFavourite(noteId: Int) {
-        favouriteNotesDao.removeFromFavourite(noteId)
+        noteDao.removeFromFavourite(noteId)
     }
 }
+
+
+

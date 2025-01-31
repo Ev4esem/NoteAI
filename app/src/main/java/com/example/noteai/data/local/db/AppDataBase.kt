@@ -7,17 +7,17 @@ import androidx.room.RoomDatabase
 import com.example.noteai.data.local.model.NoteDbModel
 
 @Database(entities = [NoteDbModel::class], version = 1, exportSchema = false)
-abstract class FavouriteDataBase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun favouriteNotesDao(): FavouriteNotesDao
+    abstract fun noteDao(): NoteDao
 
     companion object {
 
-        private const val DB_NAME = "FavouriteDatabase"
-        private var INSTANCE: FavouriteDataBase? = null
+        private const val DB_NAME = "NotesDatabase"
+        private var INSTANCE: AppDatabase? = null
         private val LOCK = Any()
 
-        fun getInstance(context: Context): FavouriteDataBase {
+        fun getInstance(context: Context): AppDatabase {
             INSTANCE?.let { return it }
 
             synchronized(LOCK) {
@@ -25,7 +25,7 @@ abstract class FavouriteDataBase : RoomDatabase() {
 
                 val database = Room.databaseBuilder(
                     context = context,
-                    klass = FavouriteDataBase::class.java,
+                    klass = AppDatabase::class.java,
                     name = DB_NAME
                 ).build()
 
