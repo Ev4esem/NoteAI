@@ -8,5 +8,5 @@ class GetNoteUseCase @Inject constructor(
     private val noteRepository: NoteRepository
 ) {
 
-    suspend operator fun invoke(noteId: Int): Note? = noteRepository.getNote(noteId)
+    suspend operator fun invoke(noteId: Int): Note? = noteRepository.getNoteById(noteId)
 }

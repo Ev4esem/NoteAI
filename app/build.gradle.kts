@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.sqldelight)
 }
 
 android {
@@ -42,7 +43,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -56,12 +56,20 @@ dependencies {
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
 
+    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
 
+    // SqlDelight
+    implementation(libs.sqldelight.android)
+    implementation(libs.sqldelight.coroutines)
+
+    // Retrofit
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gsonConverter)
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -69,4 +77,12 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+sqldelight {
+    databases {
+        create("NoteDataBase") {
+            packageName.set("com.example.noteai.data.local.db")
+        }
+    }
 }

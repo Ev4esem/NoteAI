@@ -1,37 +1,41 @@
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
-import com.example.noteai.data.local.model.NoteDbModel
+package com.example.noteai.data.local.db
+
+import com.example.noteai.data.mapper.toDbModel
+import com.example.noteai.data.mapper.toDomain
+import com.example.noteai.domain.entity.Note
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-@Dao
-interface NoteDao {
+class NoteDao @Inject constructor (
+    private val noteDataBase: NoteDataBase,
+) {
 
-    @Query("SELECT * FROM notes")
-    fun getAllNotes(): Flow<List<NoteDbModel>>
+    private val query get() = noteDataBase.noteDbEntityQueries
 
-    @Query("SELECT * FROM notes WHERE id = :noteId LIMIT 1")
-    suspend fun getNoteById(noteId: Int): NoteDbModel?
+    fun getAllNotes(): Flow<List<Note>> = flow {
+        val notes = query.getAllNotes().executeAsList().map {
+            it.toDomain()
+        }
+        emit(notes)
+    }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addToFavourite(noteDbModel: NoteDbModel)
+    suspend fun getNoteById(noteId: Long): Note? = withContext(Dispatchers.IO) {
+        query.getNoteById(noteId).executeAsOneOrNull()?.toDomain()
+    }
 
-    @Update
-    suspend fun updateNote(noteDbModel: NoteDbModel)
+    suspend fun addNote(note: Note) = withContext(Dispatchers.IO) {
+        query.insertNote(note.toDbModel())
+    }
 
-    @Query("DELETE FROM notes WHERE id = :noteId")
-    suspend fun deleteNote(noteId: Int)
+    suspend fun updateNote(note: Note) = withContext(Dispatchers.IO) {
+        query.insertNote(note.toDbModel())
+    }
 
-    @Query("DELETE FROM notes WHERE id = :noteId")
-    suspend fun removeFromFavourite(noteId: Int)
+    suspend fun deleteNote(noteId: Long) = withContext(Dispatchers.IO) {
+        query.removeNote(noteId)
+    }
 
-    @Query("SELECT * FROM notes WHERE isFavourite = 1")
-    fun getFavouriteNotes(): Flow<List<NoteDbModel>>
-
-    @Query("SELECT EXISTS (SELECT * FROM notes WHERE id = :noteId AND isFavourite = 1)")
-    fun observeIsFavourite(noteId: Int): Flow<Boolean>
 }
-
-
