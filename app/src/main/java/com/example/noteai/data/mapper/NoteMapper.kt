@@ -9,12 +9,13 @@ fun NoteDbEntity.toDomain(): Note = Note(
         isFavorite = isFavourite.toBoolean() ,
         createdAt = createdAt
     )
+
 fun Long.toBoolean(): Boolean = this == 1L
 
 fun Note.toDbModel(): NoteDbEntity = NoteDbEntity(
         id = id,
         title = title,
-        createdAt = createdAt,
+        createdAt = System.currentTimeMillis(),
         isFavourite = isFavorite.toLong(),
     )
 
