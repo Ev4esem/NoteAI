@@ -9,6 +9,11 @@ CREATE TABLE IF NOT EXISTS noteDbEntity (
             SELECT *
             FROM noteDbEntity;
 
+            getAllFavouriteNotes:
+            SELECT *
+            FROM noteDbEntity
+            WHERE isFavourite = 1;
+
             getNoteById:
             SELECT *
             FROM noteDbEntity
@@ -22,7 +27,7 @@ CREATE TABLE IF NOT EXISTS noteDbEntity (
             DELETE FROM noteDbEntity
             WHERE id = ?;
 
-            changeNoteFavourite:
+            changeFavouriteStatus:
             UPDATE noteDbEntity
             SET isFavourite = CASE
                             WHEN isFavourite = 0 THEN 1

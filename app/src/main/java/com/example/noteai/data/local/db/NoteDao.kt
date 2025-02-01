@@ -1,25 +1,33 @@
 package com.example.noteai.data.local.db
 
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.example.noteai.data.mapper.toDbModel
 import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
+import noteai.NoteDbEntity
 
-class NoteDao @Inject constructor (
+class NoteDao (
     private val noteDataBase: NoteDataBase,
 ) {
 
     private val query get() = noteDataBase.noteDbEntityQueries
 
-    fun getAllNotes(): Flow<List<Note>> = flow {
-        val notes = query.getAllNotes().executeAsList().map {
-            it.toDomain()
-        }
-        emit(notes)
+    fun getAllNotes(): Flow<List<NoteDbEntity>> = query
+        .getAllNotes()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+
+    fun getAllFavouriteNotes(): Flow<List<NoteDbEntity>> = query
+        .getAllFavouriteNotes()
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+
+    suspend fun changeFavouriteStatus(noteId: Long) = withContext(Dispatchers.IO) {
+        query.changeFavouriteStatus(noteId)
     }
 
     suspend fun getNoteById(noteId: Long): Note? = withContext(Dispatchers.IO) {

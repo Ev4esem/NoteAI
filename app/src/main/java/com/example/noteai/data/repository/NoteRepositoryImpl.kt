@@ -1,38 +1,41 @@
 package com.example.noteai.data.repository
 
 import com.example.noteai.data.local.db.NoteDao
-import com.example.noteai.data.mapper.toDbModel
 import com.example.noteai.data.mapper.toDomain
-import com.example.noteai.di.NoteScope
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-@NoteScope
-class NoteRepositoryImpl @Inject constructor (
-    private val notesDao: NoteDao,
-) : NoteRepository {
+class NoteRepositoryImpl : NoteRepository, KoinComponent {
+
+    private val noteDao by inject<NoteDao>()
 
     override suspend fun getAllNotes(): Flow<List<Note>> {
-        return notesDao.getAllNotes()
+        val notes = noteDao.getAllNotes().map { notes ->
+            notes.map { note ->
+                note.toDomain()
+            }
+        }
+        return notes
     }
 
     override suspend fun getNoteById(noteId: Long): Note? {
-       return notesDao.getNoteById(noteId)
+       return noteDao.getNoteById(noteId)
     }
 
     override suspend fun addNote(note: Note) {
-        notesDao.addNote(note)
+        noteDao.addNote(note)
     }
 
     override suspend fun updateNote(note: Note) {
-        notesDao.updateNote(note)
+        noteDao.updateNote(note)
     }
 
     override suspend fun deleteNote(noteId: Long) {
-        notesDao.deleteNote(noteId)
+        noteDao.deleteNote(noteId)
     }
 }
 

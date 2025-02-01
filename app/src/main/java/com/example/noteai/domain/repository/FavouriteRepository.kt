@@ -7,9 +7,6 @@ interface FavouriteRepository {
 
     val favouriteNotes: Flow<List<Note>>
 
-    fun observeIsFavourite(noteId: Int): Flow<Boolean>
+    suspend fun changeFavouriteStatus(noteId: Long)
 
-    suspend fun addToFavourite(note: Note)
-
-    suspend fun removeFromFavourite(noteId: Int)
 }

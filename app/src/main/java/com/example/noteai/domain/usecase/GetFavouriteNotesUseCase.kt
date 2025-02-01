@@ -1,9 +1,8 @@
 package com.example.noteai.domain.usecase
 
 import com.example.noteai.domain.repository.FavouriteRepository
-import javax.inject.Inject
 
-class GetFavouriteNotesUseCase @Inject constructor(
+class GetFavouriteNotesUseCase (
     private val favouriteRepository: FavouriteRepository
 ) {
 

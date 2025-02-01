@@ -2,9 +2,8 @@ package com.example.noteai.domain.usecase
 
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
-import javax.inject.Inject
 
-class UpdateNoteUseCase @Inject constructor(
+class UpdateNoteUseCase (
     private val noteRepository: NoteRepository
 ) {
 

@@ -3,9 +3,8 @@ package com.example.noteai.domain.usecase
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
-class GetAllNotesUseCase @Inject constructor(
+class GetAllNotesUseCase (
     private val noteRepository: NoteRepository
 ) {
 
