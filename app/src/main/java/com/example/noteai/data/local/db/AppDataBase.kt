@@ -6,14 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.noteai.data.local.model.NoteDbModel
 
+/*
+    Падает с ошибкой так как не находит
+    Dao класс, room compiler просто не генерит Dao класс
+    из за этого падает с ошибкой постоянно
+ */
+
 @Database(entities = [NoteDbModel::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun noteDao(): NoteDao
-
     companion object {
 
-        private const val DB_NAME = "NotesDatabase"
+        private const val DB_NAME = "NotesDatabase.db"
         private var INSTANCE: AppDatabase? = null
         private val LOCK = Any()
 

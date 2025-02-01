@@ -1,15 +1,17 @@
 package com.example.noteai.data.repository
 
+import NoteDao
 import com.example.noteai.data.mapper.toDbModel
 import com.example.noteai.data.mapper.toDomain
+import com.example.noteai.di.NoteScope
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
-class NoteRepositoryImpl @Inject constructor(
-    private val notesDao: NoteDao
+@NoteScope
+class NoteRepositoryImpl (
+    private val notesDao: NoteDao,
 ) : NoteRepository {
 
     override suspend fun getAllNotes(): Flow<List<Note>> {

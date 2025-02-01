@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kapt)
 }
 
 android {
@@ -52,11 +51,15 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.room.core)
+
+    implementation(libs.room.ktx)
+    implementation(libs.room.runtime)
     ksp(libs.room.compiler)
+
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.android.compiler)
     implementation(libs.hilt.navigation.compose)
+
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gsonConverter)
     testImplementation(libs.junit)
