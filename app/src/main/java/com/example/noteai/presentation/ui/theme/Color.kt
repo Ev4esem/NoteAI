@@ -1,4 +1,4 @@
-package com.example.noteai.ui.theme
+package com.example.noteai.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
