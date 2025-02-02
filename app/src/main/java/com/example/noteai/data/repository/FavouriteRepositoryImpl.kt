@@ -1,33 +1,26 @@
 package com.example.noteai.data.repository
 
-import com.example.noteai.data.mapper.toDbModel
+import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.FavouriteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class FavouriteRepositoryImpl @Inject constructor(
-    private val noteDao: NoteDao
-) : FavouriteRepository {
+class FavouriteRepositoryImpl : FavouriteRepository, KoinComponent {
+
+    private val noteDao by inject<NoteDao>()
 
     override val favouriteNotes: Flow<List<Note>>
-        get() = noteDao.getFavouriteNotes()
-            .map { notesDb -> notesDb.map { it.toDomain() } }
+        get() = noteDao.getAllFavouriteNotes()
+            .map { notes -> notes.map { it.toDomain() } }
 
-    override fun observeIsFavourite(noteId: Int): Flow<Boolean> {
-        return noteDao.observeIsFavourite(noteId)
+    override suspend fun changeFavouriteStatus(noteId: Long) {
+        noteDao.changeFavouriteStatus(noteId)
     }
 
-    override suspend fun addToFavourite(note: Note) {
-        val updatedNote = note.copy(isFavorite = true)
-        noteDao.addToFavourite(updatedNote.toDbModel())
-    }
-
-    override suspend fun removeFromFavourite(noteId: Int) {
-        noteDao.removeFromFavourite(noteId)
-    }
 }
 
 

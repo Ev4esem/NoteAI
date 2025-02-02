@@ -1,40 +1,41 @@
 package com.example.noteai.data.repository
 
-import com.example.noteai.data.mapper.toDbModel
+import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class NoteRepositoryImpl @Inject constructor(
-    private val notesDao: NoteDao
-) : NoteRepository {
+class NoteRepositoryImpl : NoteRepository, KoinComponent {
+
+    private val noteDao by inject<NoteDao>()
 
     override suspend fun getAllNotes(): Flow<List<Note>> {
-        return notesDao.getAllNotes().map { notesDbModelList ->
-            notesDbModelList.map { it.toDomain() }
+        val notes = noteDao.getAllNotes().map { notes ->
+            notes.map { note ->
+                note.toDomain()
+            }
         }
+        return notes
     }
 
-    override suspend fun getNote(noteId: Int): Note? {
-        val noteDbModel = notesDao.getNoteById(noteId)
-        return noteDbModel?.toDomain()
+    override suspend fun getNoteById(noteId: Long): Note? {
+       return noteDao.getNoteById(noteId)
     }
 
     override suspend fun addNote(note: Note) {
-        val noteDbModel = note.toDbModel()
-        notesDao.addToFavourite(noteDbModel)
+        noteDao.addNote(note)
     }
 
     override suspend fun updateNote(note: Note) {
-        val noteDbModel = note.toDbModel()
-        notesDao.updateNote(noteDbModel)
+        noteDao.updateNote(note)
     }
 
-    override suspend fun deleteNote(noteId: Int) {
-        notesDao.deleteNote(noteId)
+    override suspend fun deleteNote(noteId: Long) {
+        noteDao.deleteNote(noteId)
     }
 }
 

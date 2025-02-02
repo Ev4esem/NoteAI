@@ -2,11 +2,11 @@ package com.example.noteai.domain.usecase
 
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
-import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
-class GetAllNotesUseCase @Inject constructor(
+class GetAllNotesUseCase (
     private val noteRepository: NoteRepository
 ) {
 
-    suspend operator fun invoke(): List<Note> = noteRepository.getAllNotes()
+    suspend operator fun invoke(): Flow<List<Note>> = noteRepository.getAllNotes()
 }

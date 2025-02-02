@@ -1,27 +1,12 @@
-/*
 package com.example.noteai.di
 
-import android.content.Context
-import com.example.noteai.data.local.db.AppDatabase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import com.example.noteai.data.local.db.NoteDao
+import com.example.noteai.data.local.db.createDataBase
+import com.example.noteai.data.local.db.sqlDriverFactory
+import org.koin.dsl.module
 
-@InstallIn(SingletonComponent::class)
-@Module
-class DatabaseModule {
-
-    @Singleton
-    @Provides
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return AppDatabase.getInstance(context)
-    }
-
-    @Provides
-    fun provideNoteDao(appDatabase: AppDatabase): NoteDao {
-        return appDatabase.notesDao()
-    }
-}*/
+val databaseModule = module {
+    factory { sqlDriverFactory() }
+    single { createDataBase(sqlDriver = get()) }
+    single { NoteDao(noteDataBase = get()) }
+}

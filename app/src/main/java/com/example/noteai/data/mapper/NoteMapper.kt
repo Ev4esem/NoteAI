@@ -1,22 +1,22 @@
 package com.example.noteai.data.mapper
 
-import com.example.noteai.data.local.model.NoteDbModel
 import com.example.noteai.domain.entity.Note
+import noteai.NoteDbEntity
 
-fun NoteDbModel.toDomain(): Note {
-    return Note(
-        id = this.id,
-        title = this.text,
-        transcription = this.text,
-        isFavorite = this.isFavourite,
-        createdAt = this.createdAt
+fun NoteDbEntity.toDomain(): Note = Note(
+        id = id,
+        title = title,
+        isFavorite = isFavourite.toBoolean() ,
+        createdAt = createdAt
     )
-}
 
-fun Note.toDbModel(): NoteDbModel {
-    return NoteDbModel(
-        id = this.id,
-        text = this.transcription,
-        isFavourite = this.isFavorite
+fun Long.toBoolean(): Boolean = this == 1L
+
+fun Note.toDbModel(): NoteDbEntity = NoteDbEntity(
+        id = id,
+        title = title,
+        createdAt = System.currentTimeMillis(),
+        isFavourite = isFavorite.toLong(),
     )
-}
+
+fun Boolean.toLong(): Long = if (this) 1 else 0
