@@ -2,6 +2,8 @@ package com.example.noteai.di
 
 import com.example.noteai.data.repository.FavouriteRepositoryImpl
 import com.example.noteai.data.repository.NoteRepositoryImpl
+import com.example.noteai.data.service.AudioRecordingService
+import com.example.noteai.domain.repository.AudioRecordingRepository
 import com.example.noteai.domain.repository.FavouriteRepository
 import com.example.noteai.domain.repository.NoteRepository
 import com.example.noteai.domain.usecase.AddNoteUseCase
@@ -10,15 +12,21 @@ import com.example.noteai.domain.usecase.DeleteNoteUseCase
 import com.example.noteai.domain.usecase.GetAllNotesUseCase
 import com.example.noteai.domain.usecase.GetFavouriteNotesUseCase
 import com.example.noteai.domain.usecase.GetNoteByIdUseCase
+import com.example.noteai.domain.usecase.StartRecordingUseCase
+import com.example.noteai.domain.usecase.StopRecordingUseCase
 import com.example.noteai.domain.usecase.UpdateNoteUseCase
+import com.example.noteai.presentation.viewmodel.AudioViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val noteModule = module {
     singleOf(::NoteRepositoryImpl) { bind<NoteRepository>() }
     singleOf(::FavouriteRepositoryImpl) { bind<FavouriteRepository>() }
+    singleOf(::AudioRecordingService) { bind<AudioRecordingRepository>() }
+    viewModel { AudioViewModel(get(), get(), get()) }
     factoryOf(::AddNoteUseCase)
     factoryOf(::AddToFavouriteUseCase)
     factoryOf(::DeleteNoteUseCase)
@@ -26,4 +34,6 @@ val noteModule = module {
     factoryOf(::GetFavouriteNotesUseCase)
     factoryOf(::GetNoteByIdUseCase)
     factoryOf(::UpdateNoteUseCase)
+    factoryOf(::StartRecordingUseCase)
+    factoryOf(::StopRecordingUseCase)
 }

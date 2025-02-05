@@ -2,7 +2,6 @@ package com.example.noteai.data.mapper
 
 import com.example.noteai.domain.entity.Note
 import noteai.NoteDbEntity
-
 fun NoteDbEntity.toDomain(): Note = Note(
         id = id,
         title = title,

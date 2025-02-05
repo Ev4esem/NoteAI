@@ -6,5 +6,3 @@ data class Note(
     val isFavorite: Boolean,
     val createdAt: Long
 )
-
-

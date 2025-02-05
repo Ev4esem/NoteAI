@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import noteai.NoteDbEntity
 
-class NoteDao (
+class NoteDao(
     private val noteDataBase: NoteDataBase,
 ) {
 
@@ -45,5 +45,4 @@ class NoteDao (
     suspend fun deleteNote(noteId: Long) = withContext(Dispatchers.IO) {
         query.removeNote(noteId)
     }
-
 }
