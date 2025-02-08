@@ -1,23 +1,32 @@
-package com.example.noteai.data.service
+package com.example.noteai.data.repository
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
+import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.example.noteai.domain.repository.AudioRecordingRepository
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
+import java.io.FileOutputStream
 
-class AudioRecordingService(
-    private val context: Context
-) : AudioRecordingRepository {
+class AudioRecordingService : Service(), KoinComponent {
+
+    private val context by inject<Context>()
 
     private var recorder: MediaRecorder? = null
 
     private var currentFile: File? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+        startForeground(NOTIFICATION_ID, createNotification())
+    }
 
     private fun createRecorder(): MediaRecorder {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -25,61 +34,60 @@ class AudioRecordingService(
         } else MediaRecorder()
     }
 
-    override fun startRecording(outputFile: File) {
+    fun startRecording(outputFile: File) {
         currentFile = outputFile
         createRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setOutputFile(outputFile.absolutePath)
+            setOutputFile(FileOutputStream(outputFile).fd)
+
             prepare()
             start()
+
+            recorder = this
         }
-        createNotification()
     }
 
-    override fun stopRecording() {
+    fun getCurrentAudio(): File? = currentFile
+
+    fun stopRecording() {
         recorder?.stop()
         recorder?.reset()
-        sendRecordingSavedBroadcast(currentFile?.absolutePath)
+        recorder = null
+        stopSelf()
     }
 
-    private fun createNotification() {
+    private fun createNotificationChannel() {
         val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "audio_recording_channel"
+            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                channelId,
+                CHANNEL_ID,
                 "Audio Recording",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification: Notification = NotificationCompat.Builder(context, channelId)
-            .setContentTitle("Recording in progress")
-            .setSmallIcon(android.R.drawable.ic_media_play)
-            .build()
-
-        startForegroundService(notification)
     }
 
-    private fun startForegroundService(notification: Notification) {
-        val intent = Intent(context, AudioRecordingService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(intent)
-        } else {
-            context.startService(intent)
+    private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
+        .setContentTitle("Recording in progress")
+        .setSmallIcon(android.R.drawable.ic_media_play)
+        .build()
+
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    companion object {
+        private const val CHANNEL_ID = "audio_recording_channel"
+        private const val NOTIFICATION_ID = 1
+
+        fun newIntent(context: Context): Intent {
+            return Intent(context, AudioRecordingService::class.java)
         }
-
-        startForegroundService(notification)
-    }
-
-    private fun sendRecordingSavedBroadcast(filePath: String?) {
-        context.sendBroadcast(Intent("com.example.noteai.ACTION_RECORDING_SAVED").apply {
-            putExtra("EXTRA_FILE_PATH", filePath)
-        })
     }
 }

@@ -12,6 +12,7 @@ ksp = "2.1.0-1.0.29"
 retrofit = "2.11.0"
 sqldelightVersion = "2.0.2"
 koinVersion = "4.0.1"
+permissionsVersion = "0.37.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -26,6 +27,10 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+
+# Permission
+accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "permissionsVersion" }
+
 
 # Sqldelight
 sqldelight-android = { group = "app.cash.sqldelight", name = "android-driver", version.ref = "sqldelightVersion" }

@@ -1,12 +1,12 @@
 package com.example.noteai.domain.usecase
 
-import com.example.noteai.domain.repository.AudioRecordingRepository
+import com.example.noteai.domain.repository.NoteRepository
 import java.io.File
 
 class StartRecordingUseCase(
-    private val audioRecordingRepository: AudioRecordingRepository
+    private val noteRepository: NoteRepository
 ) {
     operator fun invoke(outputFile: File) {
-        audioRecordingRepository.startRecording(outputFile)
+        noteRepository.startRecording(outputFile)
     }
 }

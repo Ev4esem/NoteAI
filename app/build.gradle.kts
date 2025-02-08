@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gsonConverter)
 
+    // Permissions
+    implementation(libs.accompanist.permissions)
 
     // Tests
     testImplementation(libs.junit)
