@@ -1,24 +1,22 @@
 package com.example.noteai.data.repository
 
 import android.content.Context
-import com.example.noteai.data.local.clearUnsentAudioPath
 import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.local.getUnsentAudioPath
-import com.example.noteai.data.local.saveUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
-import com.example.noteai.data.network.AudioApiService
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import com.example.noteai.utils.Response
-import com.example.noteai.utils.handlerError
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onEach
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okio.IOException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -28,23 +26,34 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
     private val noteDao by inject<NoteDao>()
     private val audioRecordingService by inject<AudioRecordingService>()
     private val context by inject<Context>()
-    private val apiService by inject<AudioApiService>()
+    private val okHttp by inject<OkHttpClient>()
 
     override suspend fun uploadAudio(): Flow<Response> = flow {
         // TODO Сделать обработку ошибки https://github.com/Ev4esem/NoteAI/issues/5
         val file = audioRecordingService.getCurrentAudio() ?: throw IllegalArgumentException("Audio file didn't found")
-        apiService.uploadAudio(file.toMultipartBody())
-            .onEach {
-                emit(Response.Loading)
+        val requestBody = MultipartBody.Builder()
+            .addFormDataPart(
+                "audio_file",
+                file.name,
+                file.asRequestBody(MultipartBody.FORM)
+            )
+            .build()
+
+        val request = Request.Builder()
+            .url("http://127.0.0.1:8005/upload/audio")
+            .post(requestBody)
+            .build()
+
+        okHttp.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                println("Ошибка: ${e.message}")
             }
-            .catch { e ->
-                saveUnsentAudioPath(context, file.absolutePath)
-                emit(Response.Error(handlerError(e)))
+
+            override fun onResponse(call: Call, response: okhttp3.Response) {
+                println("\"Ответ: ${response.body?.string()}\"")
             }
-            .onCompletion {
-                clearUnsentAudioPath(context)
-                Response.Success(Unit)
-            }
+        }
+        )
     }
 
     override fun startRecording(outputFile: File) {
@@ -61,14 +70,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     override fun getCurrentAudioFile(): File? {
         return audioRecordingService.getCurrentAudio()
-    }
-
-    // TODO Добавить константы https://github.com/Ev4esem/NoteAI/issues/5
-    private fun File.toMultipartBody(): MultipartBody.Part {
-        val requestBody: RequestBody = RequestBody.create(
-            okhttp3.MediaType.parse("audio/*"), this
-        )
-        return MultipartBody.Part.createFormData("file", this.name, requestBody)
     }
 
     override suspend fun getAllNotes(): Flow<List<Note>> {
