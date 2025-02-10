@@ -61,6 +61,9 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gsonConverter)
 
+    // OkHttp
+    implementation(libs.okhttp)
+
     // Permissions
     implementation(libs.accompanist.permissions)
 

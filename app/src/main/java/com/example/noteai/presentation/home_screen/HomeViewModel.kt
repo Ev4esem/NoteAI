@@ -11,6 +11,7 @@ import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
 import com.example.noteai.utils.EffectHandler
 import com.example.noteai.utils.IntentHandler
+import com.example.noteai.utils.Response
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -127,32 +128,32 @@ class HomeViewModel(
     private fun uploadAudio() {
         viewModelScope.launch {
             Log.d(TAG, noteRepositoryImpl.getCurrentAudioFile()?.name.toString())
-//            sendAudioUseCase().collect {
-//                when(it) {
-//                    is Response.Error -> {
-//                        it.message?.let { message ->
-//                            sendEffect(
-//                                HomeEffect.ShowToast(message)
-//                            )
-//                        }
-//                    }
-//                    is Response.Loading -> {
-//                        _uiState.update { currentState ->
-//                            currentState.copy(
-//                                loading = true,
-//                            )
-//                        }
-//                    }
-//                    is Response.Success<*> -> {
-//                        _uiState.update { currentState ->
-//                            currentState.copy(
-//                                loading = false,
-//                                audioState = AudioState.INITIAL
-//                            )
-//                        }
-//                    }
-//                }
-//            }
+            sendAudioUseCase().collect {
+                when(it) {
+                    is Response.Error -> {
+                        it.message?.let { message ->
+                            sendEffect(
+                                HomeEffect.ShowToast(message)
+                            )
+                        }
+                    }
+                    is Response.Loading -> {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                loading = true,
+                            )
+                        }
+                    }
+                    is Response.Success<*> -> {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                loading = false,
+                                audioState = AudioState.INITIAL
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
