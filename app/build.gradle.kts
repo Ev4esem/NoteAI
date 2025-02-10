@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.sqldelight)
 }
 
@@ -61,6 +60,9 @@ dependencies {
     // Retrofit
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.gsonConverter)
+
+    // Permissions
+    implementation(libs.accompanist.permissions)
 
     // Tests
     testImplementation(libs.junit)
