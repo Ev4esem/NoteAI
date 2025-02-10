@@ -11,7 +11,7 @@ interface NoteRepository {
 
     suspend fun getNoteById(noteId: Long): Note?
 
-    suspend fun uploadAudio(): Flow<Response>
+    suspend fun uploadAudio()
 
     fun startRecording(outputFile: File)
 

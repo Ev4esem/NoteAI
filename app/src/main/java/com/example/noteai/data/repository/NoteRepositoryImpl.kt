@@ -1,21 +1,21 @@
 package com.example.noteai.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
-import com.example.noteai.utils.Response
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import okhttp3.Call
 import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody
 import okio.IOException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -28,29 +28,29 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
     private val context by inject<Context>()
     private val okHttp by inject<OkHttpClient>()
 
-    override suspend fun uploadAudio(): Flow<Response> = flow {
+    override suspend fun uploadAudio() {
         // TODO Сделать обработку ошибки https://github.com/Ev4esem/NoteAI/issues/5
         val file = audioRecordingService.getCurrentAudio() ?: throw IllegalArgumentException("Audio file didn't found")
         val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
             .addFormDataPart(
-                "audio_file",
+                "file",
                 file.name,
-                file.asRequestBody(MultipartBody.FORM)
-            )
-            .build()
+                RequestBody.create("audio/mpeg".toMediaTypeOrNull(), file)
+        ).build()
 
         val request = Request.Builder()
-            .url("http://127.0.0.1:8005/upload/audio")
+            .url("http://10.0.2.2:8005/upload/audio")
             .post(requestBody)
             .build()
 
         okHttp.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                println("Ошибка: ${e.message}")
+                Log.d("NoteRepositoryImpl","Ошибка: ${e.message}")
             }
 
             override fun onResponse(call: Call, response: okhttp3.Response) {
-                println("\"Ответ: ${response.body?.string()}\"")
+                Log.d("NoteRepositoryImpl","\"Ответ: ${response.request.body.toString()}\"")
             }
         }
         )

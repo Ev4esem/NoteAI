@@ -7,5 +7,5 @@ import kotlinx.coroutines.flow.Flow
 class SendAudioUseCase(
     private val noteRepository: NoteRepository,
 ) {
-    suspend operator fun invoke(): Flow<Response> = noteRepository.uploadAudio()
+    suspend operator fun invoke() = noteRepository.uploadAudio()
 }

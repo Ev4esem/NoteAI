@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 # Запуск FastAPI приложения с помощью uvicorn
 echo "Запуск приложения FastAPI..."
-uvicorn main:app --reload
+python main.py
 
 # Деактивация виртуального окружения после завершения работы
 deactivate

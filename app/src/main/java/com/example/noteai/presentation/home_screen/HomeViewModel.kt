@@ -128,32 +128,33 @@ class HomeViewModel(
     private fun uploadAudio() {
         viewModelScope.launch {
             Log.d(TAG, noteRepositoryImpl.getCurrentAudioFile()?.name.toString())
-            sendAudioUseCase().collect {
-                when(it) {
-                    is Response.Error -> {
-                        it.message?.let { message ->
-                            sendEffect(
-                                HomeEffect.ShowToast(message)
-                            )
-                        }
-                    }
-                    is Response.Loading -> {
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                loading = true,
-                            )
-                        }
-                    }
-                    is Response.Success<*> -> {
-                        _uiState.update { currentState ->
-                            currentState.copy(
-                                loading = false,
-                                audioState = AudioState.INITIAL
-                            )
-                        }
-                    }
-                }
-            }
+            sendAudioUseCase()
+//            sendAudioUseCase().collect {
+//                when(it) {
+//                    is Response.Error -> {
+//                        it.message?.let { message ->
+//                            sendEffect(
+//                                HomeEffect.ShowToast(message)
+//                            )
+//                        }
+//                    }
+//                    is Response.Loading -> {
+//                        _uiState.update { currentState ->
+//                            currentState.copy(
+//                                loading = true,
+//                            )
+//                        }
+//                    }
+//                    is Response.Success<*> -> {
+//                        _uiState.update { currentState ->
+//                            currentState.copy(
+//                                loading = false,
+//                                audioState = AudioState.INITIAL
+//                            )
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 
