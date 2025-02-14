@@ -1,8 +1,8 @@
 package com.example.noteai.domain.repository
 
 import com.example.noteai.domain.entity.Note
-import com.example.noteai.utils.Response
 import kotlinx.coroutines.flow.Flow
+import okhttp3.Response
 import java.io.File
 
 interface NoteRepository {
@@ -11,7 +11,7 @@ interface NoteRepository {
 
     suspend fun getNoteById(noteId: Long): Note?
 
-    suspend fun uploadAudio()
+    fun uploadAudio(): Flow<Response>
 
     fun startRecording(outputFile: File)
 

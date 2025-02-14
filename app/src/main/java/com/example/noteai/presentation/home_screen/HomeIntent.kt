@@ -23,6 +23,4 @@ sealed interface HomeIntent {
         data object DismissRationaleDialog: AudioDialog
 
     }
-
-
 }

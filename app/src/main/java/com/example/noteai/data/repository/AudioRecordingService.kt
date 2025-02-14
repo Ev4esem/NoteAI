@@ -8,6 +8,7 @@ import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -47,6 +48,7 @@ class AudioRecordingService : Service(), KoinComponent {
 
             recorder = this
         }
+        Log.d("AudioRecordingService", "StartRecording")
     }
 
     fun getCurrentAudio(): File? = currentFile
@@ -60,7 +62,7 @@ class AudioRecordingService : Service(), KoinComponent {
 
     private fun createNotificationChannel() {
         val notificationManager =
-            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            this.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
