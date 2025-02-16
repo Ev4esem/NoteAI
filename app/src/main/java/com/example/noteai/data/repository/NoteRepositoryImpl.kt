@@ -15,7 +15,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.Response
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -37,7 +37,7 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
             .addFormDataPart(
                 "file",
                 file.name,
-                RequestBody.create("audio/mpeg".toMediaTypeOrNull(), file)
+                file.asRequestBody("audio/mpeg".toMediaTypeOrNull())
             )
             .build()
 
@@ -69,9 +69,7 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     override suspend fun getAllNotes(): Flow<List<Note>> {
         val notes = noteDao.getAllNotes().map { notes ->
-            notes.map { note ->
-                note.toDomain()
-            }
+            notes.map { it.toDomain() }
         }
         return notes
     }

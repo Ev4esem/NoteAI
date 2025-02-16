@@ -20,7 +20,6 @@ class FavouriteRepositoryImpl : FavouriteRepository, KoinComponent {
     override suspend fun changeFavouriteStatus(noteId: Long) {
         noteDao.changeFavouriteStatus(noteId)
     }
-
 }
 
 

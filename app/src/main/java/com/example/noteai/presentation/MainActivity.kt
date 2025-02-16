@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
             NoteAITheme {
                 MainScreen(
                     viewModel = mainViewModel,
-                   onIntent = mainViewModel::handlerIntent,
+                    onIntent = mainViewModel::handlerIntent,
                 )
             }
         }

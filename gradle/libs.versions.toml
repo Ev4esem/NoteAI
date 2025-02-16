@@ -8,7 +8,6 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.0"
 composeBom = "2025.01.01"
-ksp = "2.1.0-1.0.29"
 retrofit = "2.11.0"
 sqldelightVersion = "2.0.2"
 koinVersion = "4.0.1"
@@ -17,7 +16,6 @@ okhttpVersion = "4.9.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-
 
 # Koin
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koinVersion" }
@@ -56,4 +54,4 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-sqldelight = { id = "app.cash.sqldelight" , version.ref = "sqldelightVersion" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelightVersion" }

@@ -2,8 +2,10 @@ package com.example.noteai.presentation.home_screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.noteai.domain.entity.Note
+import com.example.noteai.domain.usecase.AddNoteUseCase
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
-import com.example.noteai.domain.usecase.GetPendingAudioUseCase
+import com.example.noteai.domain.usecase.GetAllNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
@@ -25,8 +27,9 @@ class HomeViewModel(
     private val changeFavoriteStatusUseCase: ChangeFavouriteStatusUseCase,
     private val startRecordingUseCase: StartRecordingUseCase,
     private val stopRecordingUseCase: StopRecordingUseCase,
-    private val getPendingAudioUseCase: GetPendingAudioUseCase,
     private val sendAudioUseCase: SendAudioUseCase,
+    private val addNoteUseCase: AddNoteUseCase,
+    private val getAllNotesUseCase: GetAllNotesUseCase,
 ) : ViewModel(), IntentHandler<HomeIntent>, EffectHandler<HomeEffect> {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -127,9 +130,7 @@ class HomeViewModel(
             sendAudioUseCase()
                 .onEach {
                     _uiState.update { currentState ->
-                        currentState.copy(
-                            loading = true,
-                        )
+                        currentState.copy(loading = true)
                     }
                     delay(3000)
                 }
@@ -137,23 +138,36 @@ class HomeViewModel(
                     val message = handlerError(it)
                     sendEffect(HomeEffect.ShowToast(message))
                 }
-                .collect { response ->
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            loading = false,
-                            audioState = AudioState.INITIAL
-                        )
-                    }
+                .collect {
+                    addNote()
                 }
         }
     }
 
-    private suspend fun init() {
-        val file = getPendingAudioUseCase()
+    private suspend fun addNote() {
+        val description = "Текст, полученный из аудио"
+
+        val newNote = Note(
+            id = System.currentTimeMillis(),
+            title = "Заметка по умолчанию",
+            description = description,
+            isFavorite = false,
+            createdAt = System.currentTimeMillis()
+        )
+
+        addNoteUseCase(newNote)
         _uiState.update { currentState ->
             currentState.copy(
-                audioState = if (file == null) AudioState.INITIAL else AudioState.NOT_RECORDED,
+                loading = false
             )
+        }
+    }
+
+    private suspend fun init() {
+        getAllNotesUseCase().collect { notes ->
+            _uiState.update { currentState ->
+                currentState.copy(notes = notes)
+            }
         }
     }
 }
