@@ -3,6 +3,7 @@ package com.example.noteai.presentation.home_screen
 import android.Manifest
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +26,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import com.example.noteai.data.repository.AudioRecordingService
+import com.example.noteai.presentation.navigation.NavRoute
 import com.example.noteai.presentation.permission_dialog.AudioRecorderPermissionScreen
 import com.example.noteai.utils.ObserveEffect
 import java.io.File
@@ -31,6 +36,7 @@ import java.io.File
 
 @Composable
 fun MainScreen(
+    navController: NavController,
     viewModel: HomeViewModel,
     onIntent: (HomeIntent) -> Unit,
 ) {
@@ -113,8 +119,19 @@ fun MainScreen(
                 Log.d("MainScreen", "Note item: $note")
 
                 Column(modifier = Modifier.padding(8.dp)) {
-                    Text(text = "Создано: ${note.createdAt}")
-                    Text(text = note.title)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp)
+                            .clickable {
+                                navController.navigate(NavRoute.Note.route + "/${note.id}")
+                            },
+                        elevation = CardDefaults.cardElevation()
+                    ) {
+                        Text(text = "Создано: ${note.createdAt}")
+                        Text(text = note.title)
+                        Text(text = note.description)
+                    }
                 }
             }
         }

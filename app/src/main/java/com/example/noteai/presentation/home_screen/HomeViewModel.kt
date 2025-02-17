@@ -1,5 +1,6 @@
 package com.example.noteai.presentation.home_screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.noteai.domain.entity.Note
@@ -18,7 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -125,7 +128,7 @@ class HomeViewModel(
         }
     }
 
-    private fun uploadAudio() {
+    /*private fun uploadAudio() {
         viewModelScope.launch {
             sendAudioUseCase()
                 .onEach {
@@ -142,25 +145,42 @@ class HomeViewModel(
                     addNote()
                 }
         }
+    }*/
+
+    private fun uploadAudio() {
+        viewModelScope.launch {
+            sendAudioUseCase()
+                .onStart {
+                    _uiState.update { it.copy(loading = true) }
+                }
+                .onEach { response ->
+                    Log.d("HomeViewModel", response)
+                    addNote(response)
+                    delay(3000)
+                }
+                .catch { exception ->
+                    val errorMessage = handlerError(exception)
+                    sendEffect(HomeEffect.ShowToast(errorMessage))
+                }
+                .onCompletion {
+                    _uiState.update { it.copy(loading = false) }
+                }
+                .collect {
+
+                }
+        }
     }
 
-    private suspend fun addNote() {
-        val description = "Текст, полученный из аудио"
-
+    private suspend fun addNote(description: String) {
         val newNote = Note(
             id = System.currentTimeMillis(),
-            title = "Заметка по умолчанию",
+            title = "Teкст",
             description = description,
             isFavorite = false,
             createdAt = System.currentTimeMillis()
         )
 
         addNoteUseCase(newNote)
-        _uiState.update { currentState ->
-            currentState.copy(
-                loading = false
-            )
-        }
     }
 
     private suspend fun init() {

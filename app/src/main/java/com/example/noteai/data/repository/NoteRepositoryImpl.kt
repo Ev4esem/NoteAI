@@ -1,11 +1,14 @@
 package com.example.noteai.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
+import com.example.noteai.domain.entity.AudioResponse
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -16,7 +19,6 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.Response
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -28,7 +30,7 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
     private val context by inject<Context>()
     private val okHttp by inject<OkHttpClient>()
 
-    override fun uploadAudio(): Flow<Response> = flow {
+    override fun uploadAudio(): Flow<String> = flow {
         val file = audioRecordingService.getCurrentAudio()
             ?: return@flow
 
@@ -47,7 +49,11 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
             .build()
 
         val response = okHttp.newCall(request).execute()
-        emit(response)
+        val jsonResponse = response.body?.string() ?: "Не тот текст"
+
+        val audioResponse = Gson().fromJson(jsonResponse, AudioResponse::class.java)
+        Log.d("NoteRepositoryImpl", audioResponse.message)
+        emit(audioResponse.message)
     }.flowOn(Dispatchers.IO)
 
 
@@ -90,4 +96,3 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
         noteDao.deleteNote(noteId)
     }
 }
-

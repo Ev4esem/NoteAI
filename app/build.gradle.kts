@@ -50,6 +50,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
+    //Navigation compose
+    implementation(libs.androidx.navigation.compose)
+
     // Koin
     implementation(libs.koin.android)
 
