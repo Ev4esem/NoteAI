@@ -1,7 +1,6 @@
 package com.example.noteai.domain.repository
 
 import com.example.noteai.domain.entity.Note
-import com.example.noteai.utils.Response
 import kotlinx.coroutines.flow.Flow
 import java.io.File
 
@@ -11,7 +10,7 @@ interface NoteRepository {
 
     suspend fun getNoteById(noteId: Long): Note?
 
-    suspend fun uploadAudio()
+    fun uploadAudio(): Flow<String>
 
     fun startRecording(outputFile: File)
 

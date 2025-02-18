@@ -38,7 +38,7 @@ fun handlerError(exception: Throwable): String {
             }
         }
         is SecurityException -> "Разрешение на запись аудио не предоставлено"
-        else -> "Неизвестная ошибка: ${exception.localizedMessage}"
+        else -> "Неизвестная ошибка: ${exception.message}"
     }.also {
         Log.e("ErrorHandler", "Error: ${exception.javaClass.simpleName}", exception)
     }

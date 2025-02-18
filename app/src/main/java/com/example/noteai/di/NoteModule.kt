@@ -28,6 +28,9 @@ val noteModule = module {
     singleOf(::FavouriteRepositoryImpl) { bind<FavouriteRepository>() }
     viewModelOf(::HomeViewModel)
     singleOf(::AudioRecordingService)
+}
+
+val useCaseModule = module {
     factoryOf(::GetPendingAudioUseCase)
     factoryOf(::SendAudioUseCase)
     factoryOf(::AddNoteUseCase)
