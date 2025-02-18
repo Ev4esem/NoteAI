@@ -21,6 +21,3 @@ class FavouriteRepositoryImpl : FavouriteRepository, KoinComponent {
         noteDao.changeFavouriteStatus(noteId)
     }
 }
-
-
-

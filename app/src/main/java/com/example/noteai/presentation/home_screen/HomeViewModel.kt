@@ -6,10 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.usecase.AddNoteUseCase
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
+import com.example.noteai.domain.usecase.DeleteNoteUseCase
 import com.example.noteai.domain.usecase.GetAllNotesUseCase
+import com.example.noteai.domain.usecase.GetFavouriteNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
+import com.example.noteai.domain.usecase.UpdateNoteUseCase
 import com.example.noteai.utils.EffectHandler
 import com.example.noteai.utils.IntentHandler
 import com.example.noteai.utils.handlerError
@@ -33,23 +36,37 @@ class HomeViewModel(
     private val sendAudioUseCase: SendAudioUseCase,
     private val addNoteUseCase: AddNoteUseCase,
     private val getAllNotesUseCase: GetAllNotesUseCase,
+    private val deleteNoteUseCase: DeleteNoteUseCase,
+    private val updateNoteUseCase: UpdateNoteUseCase,
+    private val getFavouriteNotesUseCase: GetFavouriteNotesUseCase,
 ) : ViewModel(), IntentHandler<HomeIntent>, EffectHandler<HomeEffect> {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+
+    private val _favouriteNotes = MutableStateFlow<List<Note>>(emptyList())
+    val favouriteNotes: StateFlow<List<Note>> = _favouriteNotes
+
+    private suspend fun getFavouriteNotes() {
+        getFavouriteNotesUseCase().collect { notes ->
+            _favouriteNotes.value = notes
+        }
+    }
 
     override val effectChannel: Channel<HomeEffect> = Channel()
 
     init {
         viewModelScope.launch {
             init()
+            getFavouriteNotes()
         }
     }
 
     override fun handlerIntent(intent: HomeIntent) {
         viewModelScope.launch {
             when (intent) {
-                is HomeIntent.ChangeFavoriteStatus -> changeFavoriteStatusUseCase(intent.noteId)
+                is HomeIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
 
                 is HomeIntent.SendRecordAudio -> uploadAudio()
 
@@ -65,6 +82,9 @@ class HomeViewModel(
 
                 is HomeIntent.AudioDialog.ShowRationaleDialog -> showRationaleDialog()
 
+                is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
+
+                is HomeIntent.UpdateNote -> updateNote(intent.noteId, intent.updatedNote)
             }
         }
     }
@@ -181,6 +201,39 @@ class HomeViewModel(
         )
 
         addNoteUseCase(newNote)
+    }
+
+    private fun deleteNote(noteId: Long) {
+        viewModelScope.launch {
+            try {
+                deleteNoteUseCase(noteId)
+            } catch (e: Exception) {
+                val errorMessage = handlerError(e)
+                sendEffect(HomeEffect.ShowToast(errorMessage))
+            }
+        }
+    }
+
+    private fun changeFavoriteStatus(noteId: Long) {
+        viewModelScope.launch {
+            try {
+                changeFavoriteStatusUseCase(noteId)
+            } catch (e: Exception) {
+                val errorMessage = handlerError(e)
+                sendEffect(HomeEffect.ShowToast(errorMessage))
+            }
+        }
+    }
+
+    private fun updateNote(noteId: Long, note: Note) {
+        viewModelScope.launch {
+            try {
+                updateNoteUseCase(note.copy(id = noteId))
+            } catch (e: Exception) {
+                val errorMessage = handlerError(e)
+                sendEffect(HomeEffect.ShowToast(errorMessage))
+            }
+        }
     }
 
     private suspend fun init() {
