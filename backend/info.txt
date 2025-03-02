@@ -1,0 +1,11 @@
+    скачать cuda 12.6
+
+    скачать ffmpeg
+
+# on MacOS using Homebrew (https://brew.sh/)
+brew install ffmpeg
+
+# on Windows using Chocolatey (https://chocolatey.org/)
+choco install ffmpeg
+
+    с pytourch скачать правильную версию tourch с поддержкой cuda
