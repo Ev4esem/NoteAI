@@ -9,27 +9,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.example.noteai.domain.entity.Note
-import com.example.noteai.presentation.home_screen.HomeIntent
-import com.example.noteai.presentation.home_screen.HomeViewModel
 
 @Composable
-fun NoteScreen(navController: NavHostController, viewModel: HomeViewModel, noteId: String?) {
-    val uiState = viewModel.uiState.collectAsState()
-    val note = uiState.value.notes.find { it.id.toString() == noteId }
+fun NoteScreen(viewModel: NoteViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+    val note = uiState.note ?: throw IllegalArgumentException("Don't found note")
 
-    val titleState = remember { mutableStateOf(note!!.title) }
-    val descriptionState = remember { note?.let { mutableStateOf(it.description) } }
+    val titleState = remember { mutableStateOf(note.title) }
+    val descriptionState = remember {  mutableStateOf(note.description) }
 
-    if (note == null) {
-        Text(text = "Заметка не найдена")
-    } else {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -45,8 +40,8 @@ fun NoteScreen(navController: NavHostController, viewModel: HomeViewModel, noteI
             )
             Text(text = "Описание:")
             TextField(
-                value = descriptionState?.value ?: "",
-                onValueChange = { descriptionState?.value = it },
+                value = descriptionState.value,
+                onValueChange = { descriptionState.value = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
@@ -54,15 +49,14 @@ fun NoteScreen(navController: NavHostController, viewModel: HomeViewModel, noteI
             Button(
                 onClick = {
                     val updatedNote = Note(
-                        id = note.id, // сохраняем оригинальный id
+                        id = note.id,
                         title = titleState.value,
-                        description = descriptionState?.value ?: "",
+                        description = descriptionState.value,
                         isFavorite = note.isFavorite,
                         createdAt = note.createdAt
                     )
                     viewModel.handlerIntent(
-                        HomeIntent.UpdateNote(
-                            noteId = note.id,
+                        NoteIntent.UpdateNote(
                             updatedNote = updatedNote
                         )
                     )
@@ -74,5 +68,4 @@ fun NoteScreen(navController: NavHostController, viewModel: HomeViewModel, noteI
             Text(text = "Дата создания: ${note.createdAt}")
             Text(text = "Избранное: ${if (note.isFavorite) "Да" else "Нет"}")
         }
-    }
 }

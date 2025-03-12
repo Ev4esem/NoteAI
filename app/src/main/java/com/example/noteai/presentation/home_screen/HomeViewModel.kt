@@ -1,6 +1,5 @@
 package com.example.noteai.presentation.home_screen
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.noteai.domain.entity.Note
@@ -8,23 +7,18 @@ import com.example.noteai.domain.usecase.AddNoteUseCase
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
 import com.example.noteai.domain.usecase.DeleteNoteUseCase
 import com.example.noteai.domain.usecase.GetAllNotesUseCase
-import com.example.noteai.domain.usecase.GetFavouriteNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
-import com.example.noteai.domain.usecase.UpdateNoteUseCase
 import com.example.noteai.utils.EffectHandler
 import com.example.noteai.utils.IntentHandler
 import com.example.noteai.utils.handlerError
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -37,29 +31,16 @@ class HomeViewModel(
     private val addNoteUseCase: AddNoteUseCase,
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val deleteNoteUseCase: DeleteNoteUseCase,
-    private val updateNoteUseCase: UpdateNoteUseCase,
-    private val getFavouriteNotesUseCase: GetFavouriteNotesUseCase,
 ) : ViewModel(), IntentHandler<HomeIntent>, EffectHandler<HomeEffect> {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
-
-    private val _favouriteNotes = MutableStateFlow<List<Note>>(emptyList())
-    val favouriteNotes: StateFlow<List<Note>> = _favouriteNotes
-
-    private suspend fun getFavouriteNotes() {
-        getFavouriteNotesUseCase().collect { notes ->
-            _favouriteNotes.value = notes
-        }
-    }
 
     override val effectChannel: Channel<HomeEffect> = Channel()
 
     init {
         viewModelScope.launch {
             init()
-            getFavouriteNotes()
         }
     }
 
@@ -68,11 +49,9 @@ class HomeViewModel(
             when (intent) {
                 is HomeIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
 
-                is HomeIntent.SendRecordAudio -> uploadAudio()
-
                 is HomeIntent.StartRecording -> startRecording(intent.file)
 
-                is HomeIntent.StopRecording -> stopRecording()
+                is HomeIntent.StopAndSendRecording -> uploadAudio()
 
                 is HomeIntent.AudioDialog.ShowAudioPermissionDialog -> showAudioPermissionDialog()
 
@@ -84,7 +63,6 @@ class HomeViewModel(
 
                 is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
 
-                is HomeIntent.UpdateNote -> updateNote(intent.noteId, intent.updatedNote)
             }
         }
     }
@@ -148,45 +126,24 @@ class HomeViewModel(
         }
     }
 
-    /*private fun uploadAudio() {
+    private fun uploadAudio() {
+        stopRecording()
         viewModelScope.launch {
             sendAudioUseCase()
                 .onEach {
                     _uiState.update { currentState ->
                         currentState.copy(loading = true)
                     }
-                    delay(3000)
-                }
-                .catch {
-                    val message = handlerError(it)
-                    sendEffect(HomeEffect.ShowToast(message))
-                }
-                .collect {
-                    addNote()
-                }
-        }
-    }*/
-
-    private fun uploadAudio() {
-        viewModelScope.launch {
-            sendAudioUseCase()
-                .onStart {
-                    _uiState.update { it.copy(loading = true) }
-                }
-                .onEach { response ->
-                    Log.d("HomeViewModel", response)
-                    addNote(response)
-                    delay(3000)
                 }
                 .catch { exception ->
                     val errorMessage = handlerError(exception)
                     sendEffect(HomeEffect.ShowToast(errorMessage))
                 }
-                .onCompletion {
-                    _uiState.update { it.copy(loading = false) }
-                }
-                .collect {
-
+                .collect { response ->
+                    _uiState.update { currentState ->
+                        currentState.copy(loading = false)
+                    }
+                    addNote(response)
                 }
         }
     }
@@ -203,37 +160,12 @@ class HomeViewModel(
         addNoteUseCase(newNote)
     }
 
-    private fun deleteNote(noteId: Long) {
-        viewModelScope.launch {
-            try {
-                deleteNoteUseCase(noteId)
-            } catch (e: Exception) {
-                val errorMessage = handlerError(e)
-                sendEffect(HomeEffect.ShowToast(errorMessage))
-            }
-        }
+    private suspend fun deleteNote(noteId: Long) {
+        deleteNoteUseCase(noteId)
     }
 
-    private fun changeFavoriteStatus(noteId: Long) {
-        viewModelScope.launch {
-            try {
-                changeFavoriteStatusUseCase(noteId)
-            } catch (e: Exception) {
-                val errorMessage = handlerError(e)
-                sendEffect(HomeEffect.ShowToast(errorMessage))
-            }
-        }
-    }
-
-    private fun updateNote(noteId: Long, note: Note) {
-        viewModelScope.launch {
-            try {
-                updateNoteUseCase(note.copy(id = noteId))
-            } catch (e: Exception) {
-                val errorMessage = handlerError(e)
-                sendEffect(HomeEffect.ShowToast(errorMessage))
-            }
-        }
+    private suspend fun changeFavoriteStatus(noteId: Long) {
+        changeFavoriteStatusUseCase(noteId)
     }
 
     private suspend fun init() {

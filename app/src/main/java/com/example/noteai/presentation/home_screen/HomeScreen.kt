@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,7 +56,7 @@ fun MainScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            onIntent(StopRecording)
+            onIntent(StopAndSendRecording)
         }
     }
 
@@ -75,7 +75,7 @@ fun MainScreen(
             }
         }
     }
-    val outputFile = File(context.filesDir, "audio_recording_${System.currentTimeMillis()}.mp4")
+
     val isRecorded =
         uiState.audioState == AudioState.NOT_RECORDED || uiState.audioState == AudioState.INITIAL
 
@@ -98,6 +98,7 @@ fun MainScreen(
                 onClick = {
                     if (isRecorded) {
                         if (uiState.audioPermissionState.isRecordingAllowing) {
+                            val outputFile = File(context.filesDir, "audio_recording_${System.currentTimeMillis()}.mp4")
                             ContextCompat.startForegroundService(
                                 context,
                                 AudioRecordingService.newIntent(context)
@@ -106,15 +107,10 @@ fun MainScreen(
                         } else if (!uiState.audioPermissionState.isShowAudioPermissionDialog) {
                             onIntent(AudioDialog.ShowAudioPermissionDialog)
                         } else {
-                            Toast.makeText(
-                                context,
-                                "Разрешите доступ к микрофону",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast.makeText(context, "Разрешите доступ к микрофону", Toast.LENGTH_LONG).show()
                         }
                     } else {
-                        onIntent(StopRecording)
-                        onIntent(SendRecordAudio)
+                        onIntent(StopAndSendRecording)
                     }
                 },
                 modifier = Modifier.padding(16.dp),
@@ -141,7 +137,7 @@ fun MainScreen(
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    itemsIndexed(uiState.notes) { index, note ->
+                    items(uiState.notes) { note ->
                         Column(
                             modifier = Modifier
                                 .padding(vertical = 8.dp)
@@ -152,11 +148,6 @@ fun MainScreen(
                                         SwipeToDismissBoxValue.StartToEnd -> return@rememberSwipeToDismissBoxState true
                                         SwipeToDismissBoxValue.EndToStart -> {
                                             onIntent(DeleteNote(note.id))
-                                            Toast.makeText(
-                                                context,
-                                                "Item deleted",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
                                         }
 
                                         SwipeToDismissBoxValue.Settled -> return@rememberSwipeToDismissBoxState true
@@ -223,7 +214,8 @@ fun MainScreen(
                                             }
                                         }
                                     }
-                                })
+                                }
+                            )
                         }
                     }
                 }
