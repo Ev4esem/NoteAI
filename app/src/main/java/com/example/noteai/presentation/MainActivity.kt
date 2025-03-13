@@ -11,7 +11,6 @@ import com.example.noteai.presentation.navigation.NotesNavHost
 import com.example.noteai.presentation.note_screen.NoteViewModel
 import com.example.noteai.presentation.ui.theme.NoteAITheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,9 +21,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val mainViewModel: HomeViewModel by viewModel()
                 val favouriteViewModel: FavouriteViewModel by viewModel()
-                val noteViewModel by viewModel<NoteViewModel> {
-                    parametersOf(navController.currentBackStackEntry?.savedStateHandle)
-                }
+                val noteViewModel: NoteViewModel by viewModel()
                 NotesNavHost(
                     mainViewModel = mainViewModel,
                     favouriteViewModel = favouriteViewModel,
