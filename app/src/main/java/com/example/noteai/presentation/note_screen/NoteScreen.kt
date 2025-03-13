@@ -8,22 +8,38 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.noteai.domain.entity.Note
 
 @Composable
-fun NoteScreen(viewModel: NoteViewModel) {
-    val uiState by viewModel.uiState.collectAsState()
-    val note = uiState.note ?: throw IllegalArgumentException("Don't found note")
+fun NoteScreen(noteId: Long?, viewModel: NoteViewModel) {
 
-    val titleState = remember { mutableStateOf(note.title) }
-    val descriptionState = remember {  mutableStateOf(note.description) }
+    LaunchedEffect(noteId) {
+        viewModel.getNoteById(noteId)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.clear()
+        }
+    }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val note = uiState.note
+
+    if (note != null) {
+
+        var titleState by remember { mutableStateOf(note.title) }
+        var descriptionState by remember { mutableStateOf(note.description) }
 
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -32,29 +48,30 @@ fun NoteScreen(viewModel: NoteViewModel) {
         ) {
             Text(text = "Название:")
             TextField(
-                value = titleState.value,
-                onValueChange = { titleState.value = it },
+                value = titleState,
+                onValueChange = { titleState = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
             )
             Text(text = "Описание:")
             TextField(
-                value = descriptionState.value,
-                onValueChange = { descriptionState.value = it },
+                value = descriptionState,
+                onValueChange = { descriptionState = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(8.dp),
             )
             Button(
                 onClick = {
                     val updatedNote = Note(
-                        id = note.id,
-                        title = titleState.value,
-                        description = descriptionState.value,
-                        isFavorite = note.isFavorite,
-                        createdAt = note.createdAt
-                    )
+                            id = note.id,
+                            title = titleState,
+                            description = descriptionState,
+                            isFavorite = note.isFavorite,
+                            createdAt = note.createdAt
+                        )
+
                     viewModel.handlerIntent(
                         NoteIntent.UpdateNote(
                             updatedNote = updatedNote
@@ -66,6 +83,6 @@ fun NoteScreen(viewModel: NoteViewModel) {
                 Text(text = "Сохранить изменения")
             }
             Text(text = "Дата создания: ${note.createdAt}")
-            Text(text = "Избранное: ${if (note.isFavorite) "Да" else "Нет"}")
         }
+    }
 }

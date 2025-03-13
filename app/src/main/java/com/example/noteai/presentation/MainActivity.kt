@@ -11,18 +11,20 @@ import com.example.noteai.presentation.navigation.NotesNavHost
 import com.example.noteai.presentation.note_screen.NoteViewModel
 import com.example.noteai.presentation.ui.theme.NoteAITheme
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.parameter.parametersOf
 
 class MainActivity : ComponentActivity() {
-    private val mainViewModel: HomeViewModel by viewModel()
-    private val favouriteViewModel: FavouriteViewModel by viewModel()
-    private val noteViewModel: NoteViewModel by viewModel()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             NoteAITheme {
                 val navController = rememberNavController()
+                val mainViewModel: HomeViewModel by viewModel()
+                val favouriteViewModel: FavouriteViewModel by viewModel()
+                val noteViewModel by viewModel<NoteViewModel> {
+                    parametersOf(navController.currentBackStackEntry?.savedStateHandle)
+                }
                 NotesNavHost(
                     mainViewModel = mainViewModel,
                     favouriteViewModel = favouriteViewModel,

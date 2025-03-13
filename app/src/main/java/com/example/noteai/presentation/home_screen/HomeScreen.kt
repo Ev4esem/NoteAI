@@ -4,7 +4,6 @@ import android.Manifest
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -177,10 +176,10 @@ fun MainScreen(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                            .clickable {
-                                                navController.navigate(NavRoute.Note.route + "/${note.id}")
-                                            },
+                                            .padding(vertical = 8.dp),
+                                        onClick = {
+                                            navController.navigate(NavRoute.Note.route + "/${note.id}")
+                                        },
                                         elevation = CardDefaults.cardElevation(8.dp),
                                     ) {
                                         Column(
