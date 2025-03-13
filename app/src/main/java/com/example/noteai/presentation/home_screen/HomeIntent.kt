@@ -4,25 +4,23 @@ import java.io.File
 
 sealed interface HomeIntent {
 
-    data class StartRecording(val file: File): HomeIntent
+    data class StartRecording(val file: File) : HomeIntent
 
-    data object StopRecording: HomeIntent
+    data object StopAndSendRecording : HomeIntent
 
-    data class ChangeFavoriteStatus(val noteId: Long): HomeIntent
+    data class ChangeFavoriteStatus(val noteId: Long) : HomeIntent
 
-    data object SendRecordAudio: HomeIntent
+    data class DeleteNote(val noteId: Long) : HomeIntent
 
-    sealed interface AudioDialog: HomeIntent {
+    sealed interface AudioDialog : HomeIntent {
 
-        data object AudioPermissionGranted: AudioDialog
+        data object AudioPermissionGranted : AudioDialog
 
-        data object ShowAudioPermissionDialog: AudioDialog
+        data object ShowAudioPermissionDialog : AudioDialog
 
-        data object ShowRationaleDialog: AudioDialog
+        data object ShowRationaleDialog : AudioDialog
 
-        data object DismissRationaleDialog: AudioDialog
+        data object DismissRationaleDialog : AudioDialog
 
     }
-
-
 }

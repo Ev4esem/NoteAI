@@ -16,7 +16,9 @@ import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
 import com.example.noteai.domain.usecase.UpdateNoteUseCase
+import com.example.noteai.presentation.favourite_screen.FavouriteViewModel
 import com.example.noteai.presentation.home_screen.HomeViewModel
+import com.example.noteai.presentation.note_screen.NoteViewModel
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -27,7 +29,12 @@ val noteModule = module {
     singleOf(::NoteRepositoryImpl) { bind<NoteRepository>() }
     singleOf(::FavouriteRepositoryImpl) { bind<FavouriteRepository>() }
     viewModelOf(::HomeViewModel)
+    viewModelOf(::FavouriteViewModel)
+    viewModelOf(::NoteViewModel)
     singleOf(::AudioRecordingService)
+}
+
+val useCaseModule = module {
     factoryOf(::GetPendingAudioUseCase)
     factoryOf(::SendAudioUseCase)
     factoryOf(::AddNoteUseCase)
