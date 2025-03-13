@@ -48,7 +48,6 @@ class AudioRecordingService : Service(), KoinComponent {
 
             recorder = this
         }
-        Log.d("AudioRecordingService", "StartRecording")
     }
 
     fun getCurrentAudio(): File? = currentFile
