@@ -1,3 +1,5 @@
+pip install "fastapi[standard]" pydantic-settings git+https://github.com/openai/whisper.git
+
     скачать cuda 12.6
 
     скачать ffmpeg

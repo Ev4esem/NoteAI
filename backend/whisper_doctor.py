@@ -18,7 +18,7 @@ print(f"Используемое устройство: {device}")
 
 # Проверка загрузки модели
 try:
-    model = whisper.load_model("base")
+    model = whisper.load_model("turbo")
     print("Модель Whisper загружена успешно!")
 except Exception as e:
     print(f"Ошибка при загрузке модели: {e}")

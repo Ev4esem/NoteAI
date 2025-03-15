@@ -1,5 +1,5 @@
 import whisper
 
-model = whisper.load_model("turbo", device="cuda")
+model = whisper.load_model("turbo")
 result = model.transcribe("./static/audio.mp3", language="ru")
 print(result["text"])
