@@ -7,6 +7,7 @@ import com.example.noteai.domain.usecase.AddNoteUseCase
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
 import com.example.noteai.domain.usecase.DeleteNoteUseCase
 import com.example.noteai.domain.usecase.GetAllNotesUseCase
+import com.example.noteai.domain.usecase.SearchNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
@@ -31,6 +32,7 @@ class HomeViewModel(
     private val addNoteUseCase: AddNoteUseCase,
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val deleteNoteUseCase: DeleteNoteUseCase,
+    private val searchNotesUseCase: SearchNotesUseCase,
 ) : ViewModel(), IntentHandler<HomeIntent>, EffectHandler<HomeEffect> {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -39,9 +41,7 @@ class HomeViewModel(
     override val effectChannel: Channel<HomeEffect> = Channel()
 
     init {
-        viewModelScope.launch {
-            init()
-        }
+        loadAllNotes()
     }
 
     override fun handlerIntent(intent: HomeIntent) {
@@ -63,6 +63,7 @@ class HomeViewModel(
 
                 is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
 
+                is HomeIntent.UpdateSearchQuery -> updateSearchQuery(intent.query)
             }
         }
     }
@@ -151,7 +152,7 @@ class HomeViewModel(
     private suspend fun addNote(description: String) {
         val newNote = Note(
             id = System.currentTimeMillis(),
-            title = "Teкст",
+            title = "Новый",
             description = description,
             isFavorite = false,
             createdAt = System.currentTimeMillis()
@@ -168,10 +169,50 @@ class HomeViewModel(
         changeFavoriteStatusUseCase(noteId)
     }
 
-    private suspend fun init() {
-        getAllNotesUseCase().collect { notes ->
-            _uiState.update { currentState ->
-                currentState.copy(notes = notes)
+    private fun updateSearchQuery(query: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                searchQuery = query,
+            )
+        }
+        if (query.isEmpty()) {
+            loadAllNotes()
+        } else {
+            searchNotes(query)
+        }
+    }
+
+    private fun searchNotes(query: String) {
+        viewModelScope.launch {
+            searchNotesUseCase(query)
+                .onEach { notes ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            loading = true,
+                        )
+                    }
+                }
+                .catch { exception ->
+                    val errorMessage = handlerError(exception)
+                    sendEffect(HomeEffect.ShowToast(errorMessage))
+                }
+                .collect { notes ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            loading = false,
+                            notes = notes
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun loadAllNotes() {
+        viewModelScope.launch {
+            getAllNotesUseCase().collect { notes ->
+                _uiState.update { currentState ->
+                    currentState.copy(notes = notes)
+                }
             }
         }
     }

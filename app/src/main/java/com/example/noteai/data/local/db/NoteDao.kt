@@ -26,6 +26,12 @@ class NoteDao(
         .asFlow()
         .mapToList(Dispatchers.IO)
 
+    fun searchNotes(query: String): Flow<List<NoteDbEntity>> = this.query
+        .searchNotes(query)
+        .asFlow()
+        .mapToList(Dispatchers.IO)
+
+
     suspend fun changeFavouriteStatus(noteId: Long) = withContext(Dispatchers.IO) {
         query.changeFavouriteStatus(noteId)
     }

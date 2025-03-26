@@ -84,6 +84,13 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
         return noteDao.getNoteById(noteId)
     }
 
+    override suspend fun searchNotes(query: String): Flow<List<Note>> {
+        val notes = noteDao.searchNotes(query).map { notes ->
+            notes.map { it.toDomain() }
+        }
+        return notes
+    }
+
     override suspend fun addNote(note: Note) {
         noteDao.addNote(note)
     }

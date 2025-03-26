@@ -12,6 +12,7 @@ import com.example.noteai.domain.usecase.GetAllNotesUseCase
 import com.example.noteai.domain.usecase.GetFavouriteNotesUseCase
 import com.example.noteai.domain.usecase.GetNoteByIdUseCase
 import com.example.noteai.domain.usecase.GetPendingAudioUseCase
+import com.example.noteai.domain.usecase.SearchNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
 import com.example.noteai.domain.usecase.StopRecordingUseCase
@@ -46,4 +47,5 @@ val useCaseModule = module {
     factoryOf(::UpdateNoteUseCase)
     factoryOf(::StartRecordingUseCase)
     factoryOf(::StopRecordingUseCase)
+    factoryOf(::SearchNotesUseCase)
 }

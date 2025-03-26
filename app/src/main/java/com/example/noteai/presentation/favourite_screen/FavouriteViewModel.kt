@@ -22,10 +22,8 @@ class FavouriteViewModel(
 
     override fun handlerIntent(intent: FavouriteIntent) {
         viewModelScope.launch {
-            when(intent) {
-                is FavouriteIntent.ChangeFavoriteStatus -> {
-                    changeFavoriteStatusUseCase(intent.noteId)
-                }
+            when (intent) {
+                is FavouriteIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
             }
         }
     }
@@ -59,5 +57,4 @@ class FavouriteViewModel(
                 }
             }
     }
-
 }

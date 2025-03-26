@@ -7,6 +7,7 @@ data class HomeUiState(
     val audioState: AudioState = AudioState.INITIAL,
     val audioPermissionState: AudioPermissionState = AudioPermissionState(),
     val loading: Boolean = false,
+    val searchQuery: String = ""
 ) {
     data class AudioPermissionState(
         val isRecordingAllowing: Boolean = false,

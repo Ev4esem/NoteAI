@@ -12,6 +12,8 @@ sealed interface HomeIntent {
 
     data class DeleteNote(val noteId: Long) : HomeIntent
 
+    data class UpdateSearchQuery(val query: String) : HomeIntent
+
     sealed interface AudioDialog : HomeIntent {
 
         data object AudioPermissionGranted : AudioDialog

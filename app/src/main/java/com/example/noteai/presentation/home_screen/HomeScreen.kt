@@ -1,8 +1,8 @@
 package com.example.noteai.presentation.home_screen
 
 import android.Manifest
-import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -12,6 +12,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,30 +25,28 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -56,6 +55,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,22 +67,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.noteai.R
 import com.example.noteai.data.repository.AudioRecordingService
 import com.example.noteai.domain.entity.Note
+import com.example.noteai.presentation.components.NoteCard
+import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.home_screen.HomeIntent.*
 import com.example.noteai.presentation.navigation.NavRoute
 import com.example.noteai.presentation.permission_dialog.AudioRecorderPermissionScreen
-import com.example.noteai.utils.DateUtils
+import com.example.noteai.utils.Constants
+import com.example.noteai.utils.Constants.DESCRIPTION_CLEAR_ICON
+import com.example.noteai.utils.Constants.DESCRIPTION_MICROPHONE_ICON
+import com.example.noteai.utils.Constants.DESCRIPTION_OUTLINE_ICON
+import com.example.noteai.utils.Constants.TITLE_SEARCH_PLACEHOLDER
+import com.example.noteai.utils.Constants.TITLE_TEMPLATE
+import com.example.noteai.utils.Constants.TITLE_TEMPLATE_STUDY
 import com.example.noteai.utils.ObserveEffect
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,11 +99,13 @@ fun MainScreen(
     navController: NavController,
     viewModel: HomeViewModel,
     onIntent: (HomeIntent) -> Unit,
+    paddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val permission = Manifest.permission.RECORD_AUDIO
-    var searchQuery by remember { mutableStateOf("") }
+
+
 
     DisposableEffect(Unit) {
         onDispose {
@@ -118,140 +129,94 @@ fun MainScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            MainTopBar(searchQuery) { searchQuery = it }
-        },
-        bottomBar = {
-            MainBottomBar(navController)
-        },
-        floatingActionButton = {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                MainFloatingButton(uiState, context, onIntent)
-            }
-        },
-        content = { paddingValues ->
-            NoteList(uiState.notes, navController, onIntent, paddingValues)
-        }
-    )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        TitleTopBar(Constants.TITLE_MAIN_SCREEN)
+        SearchNote(
+            onSearch = { query ->
+                viewModel.handlerIntent(UpdateSearchQuery(query))
+            },
+            searchQuery = uiState.searchQuery,
+        )
+        NoteList(
+            notes = uiState.notes,
+            navController = navController,
+            onIntent = onIntent,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopBar(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+fun SearchNote(
+    onSearch: (String) -> Unit,
+    searchQuery: String,
+
     ) {
-        TopAppBar(
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Домашний экран",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                }
-            }
-        )
-        TextField(
-            value = searchQuery,
-            onValueChange = onSearchQueryChange,
-            placeholder = { Text("Поиск", color = Color.White) },
-            singleLine = true,
-            maxLines = 1,
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.search_icon),
-                    contentDescription = "Поиск",
-                    tint = Color.White
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(top = 8.dp)
-                .height(50.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFF747D6C),
-                unfocusedContainerColor = Color(0xFF747D6C),
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                cursorColor = Color.White,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+
+    TextField(
+        value = searchQuery,
+        onValueChange = { onSearch(it) },
+        placeholder = {
+            Text(
+                text = TITLE_SEARCH_PLACEHOLDER,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White
             )
-        )
-    }
-}
-
-
-@Composable
-fun MainBottomBar(navController: NavController) {
-    BottomAppBar(
-        containerColor = Color(0xFF1F1F1F),
-        contentColor = Color(0xFF808080),
+        },
+        singleLine = true,
+        maxLines = 1,
+        leadingIcon = {
+            Icon(
+                painter = painterResource(id = R.drawable.search_icon),
+                contentDescription = Constants.DESCRIPTION_SEARCH_ICON,
+                tint = Color.White
+            )
+        },
+        trailingIcon = {
+            if (searchQuery.isNotEmpty()) {
+                IconButton(onClick = { onSearch("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = DESCRIPTION_CLEAR_ICON,
+                        tint = Color.White
+                    )
+                }
+            }
+        },
         modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 50.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(
-                    onClick = { navController.navigate(NavRoute.Note.route) },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.subtract),
-                        contentDescription = "Записи",
-                    )
-                }
-                Text(
-                    text = "Записи",
-                    fontSize = 10.sp,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                IconButton(
-                    onClick = { navController.navigate(NavRoute.Favourite.route) },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.vector),
-                        contentDescription = "Избранное",
-                    )
-                }
-                Text(
-                    text = "Избранное",
-                    fontSize = 10.sp,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-        }
-    }
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .height(52.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFF747D6C),
+            unfocusedContainerColor = Color(0xFF747D6C),
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            cursorColor = Color.White,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done
+        )
+    )
 }
 
-
 @Composable
-fun MainFloatingButton(uiState: HomeUiState, context: Context, onIntent: (HomeIntent) -> Unit) {
+fun MainFloatingButton(
+    uiState: HomeUiState,
+    onIntent: (HomeIntent) -> Unit,
+) {
+
+    val context = LocalContext.current
+    var showSheet by remember { mutableStateOf(false) }
     val isRecorded =
         uiState.audioState == AudioState.NOT_RECORDED || uiState.audioState == AudioState.INITIAL
     var isRecording by remember { mutableStateOf(false) }
@@ -259,107 +224,205 @@ fun MainFloatingButton(uiState: HomeUiState, context: Context, onIntent: (HomeIn
         modifier = Modifier
             .background(
                 color = Color(0xFF1C2317),
-                shape = RoundedCornerShape(30.dp)
+                shape = RoundedCornerShape(50.dp)
             ),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Button(
-            modifier = Modifier
-                .padding(10.dp)
-                .size(56.dp),
-            onClick = {
-                if (isRecorded) {
-                    if (uiState.audioPermissionState.isRecordingAllowing) {
-                        val outputFile = File(
-                            context.filesDir,
-                            "audio_recording_${System.currentTimeMillis()}.mp4"
-                        )
-                        ContextCompat.startForegroundService(
-                            context,
-                            AudioRecordingService.newIntent(context)
-                        )
-                        onIntent(StartRecording(outputFile))
-                        isRecording = true
-                    } else if (!uiState.audioPermissionState.isShowAudioPermissionDialog) {
-                        onIntent(AudioDialog.ShowAudioPermissionDialog)
+        if (uiState.loading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(start = 20.dp, top = 14.dp, end = 20.dp, bottom = 26.dp)
+                    .size(56.dp),
+                color = Color(0xFF1C2317),
+                strokeWidth = 4.dp,
+                trackColor = Color.White
+            )
+        } else {
+            IconButton(
+                modifier = Modifier
+                    .padding(
+                        start = 20.dp,
+                        top = 10.dp,
+                        end = 0.dp,
+                        bottom = 10.dp,
+                    )
+                    .size(56.dp),
+                onClick = {
+                    if (isRecorded) {
+                        if (uiState.audioPermissionState.isRecordingAllowing) {
+                            val outputFile = File(
+                                context.filesDir,
+                                "audio_recording_${System.currentTimeMillis()}.mp4"
+                            )
+                            ContextCompat.startForegroundService(
+                                context,
+                                AudioRecordingService.newIntent(context)
+                            )
+                            onIntent(StartRecording(outputFile))
+                            isRecording = true
+                        } else if (!uiState.audioPermissionState.isShowAudioPermissionDialog) {
+                            onIntent(AudioDialog.ShowAudioPermissionDialog)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                Constants.AUDIO_PERMISSION_ERROR_MESSAGE,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     } else {
-                        Toast.makeText(
-                            context,
-                            "Разрешите доступ к микрофону",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        onIntent(StopAndSendRecording)
+                        isRecording = false
                     }
-                } else {
-                    onIntent(StopAndSendRecording)
-                    isRecording = false
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38452D)),
-            shape = CircleShape
-        ) {
-            if (uiState.loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(10.dp),
-                    color = Color.White
-                )
-            } else {
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(0xFF38452D),
+                    contentColor = Color.White,
+                ),
+            ) {
                 Icon(
                     painter = painterResource(id = if (isRecorded) R.drawable.microphone else R.drawable.vector_1),
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
+                    contentDescription = DESCRIPTION_MICROPHONE_ICON,
                 )
+
             }
         }
-        if (isRecording) {
+        if (isRecording && !uiState.loading) {
             RecordingWaveAnimation(
                 modifier = Modifier
                     .padding(20.dp)
                     .align(Alignment.CenterVertically),
             )
-        } else {
-            Button(
+        } else if (!uiState.loading) {
+            IconButton(
                 modifier = Modifier
-                    .padding(10.dp)
+                    .padding(
+                        start = 0.dp,
+                        top = 10.dp,
+                        end = 20.dp,
+                        bottom = 10.dp,
+                    )
                     .size(56.dp),
-                onClick = {},
-                shape = CircleShape,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF38452D))
+                onClick = {
+                    showSheet = true
+                },
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = Color(0xFF38452D),
+                    contentColor = Color.White
+                )
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.outline),
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp)
+                    contentDescription = DESCRIPTION_OUTLINE_ICON,
                 )
+            }
+        }
+        MyBottomSheet(showSheet) { showSheet = false }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyBottomSheet(showSheet: Boolean, onDismiss: () -> Unit) {
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+            shape = RoundedCornerShape(
+                topStart = 32.dp,
+                topEnd = 32.dp,
+                bottomEnd = 0.dp,
+                bottomStart = 0.dp
+            ),
+            containerColor = Color(0xFF38452D),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 68.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    TITLE_TEMPLATE,
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = Color.White,
+                )
+                Spacer(modifier = Modifier.height(25.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        16.dp,
+                        Alignment.CenterHorizontally
+                    ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(132.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0xFF2C3520)),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Button(
+                            onClick = {},
+                            modifier = Modifier.padding(top = 12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF122505)),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Text(
+                                TITLE_TEMPLATE_STUDY,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color(0xFFFFFFFF),
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(132.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color(0xFF2C3520)),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Button(
+                            onClick = {},
+                            modifier = Modifier.padding(top = 12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF122505)),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Text(
+                                Constants.TITLE_TEMPLATE_WORK, color = Color(0xFFFFFFFF),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteList(
     notes: List<Note>,
     navController: NavController,
     onIntent: (HomeIntent) -> Unit,
-    paddingValues: PaddingValues
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
-            .padding(top = 16.dp)
+            .padding(start = 20.dp, top = 28.dp, end = 20.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(notes) { note ->
-                NoteItem(
-                    note, {}, navController, onIntent
-                )
-            }
+        items(items = notes, key = { it.id }) { note ->
+            NoteItem(
+                note = note,
+                navController = navController,
+                onIntentRemove = onIntent,
+            )
         }
     }
 }
@@ -367,115 +430,61 @@ fun NoteList(
 @Composable
 fun NoteItem(
     note: Note,
-    onCopyClick: () -> Unit,
     navController: NavController,
-    onIntent: (HomeIntent) -> Unit
+    onIntentRemove: (HomeIntent) -> Unit,
 ) {
-    val context = LocalContext.current
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = {
-            when (it) {
-                SwipeToDismissBoxValue.StartToEnd -> false
-                SwipeToDismissBoxValue.EndToStart -> {
-                    onIntent(DeleteNote(note.id))
-                    Toast.makeText(context, "Удалено", Toast.LENGTH_SHORT).show()
-                    true
+    val coroutineScope = rememberCoroutineScope()
+    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { state ->
+            if (state == SwipeToDismissBoxValue.EndToStart) {
+                coroutineScope.launch {
+                    delay(1.seconds)
+                    onIntentRemove(DeleteNote(note.id))
                 }
-
-                else -> true
+                return@rememberSwipeToDismissBoxState true
+            } else {
+                return@rememberSwipeToDismissBoxState false
             }
         },
-        positionalThreshold = { it * .25f }
     )
     SwipeToDismissBox(
-        state = dismissState,
+        state = swipeToDismissBoxState,
         backgroundContent = {
-            val progress = dismissState.progress
-            val color = when (dismissState.dismissDirection) {
-                SwipeToDismissBoxValue.EndToStart -> Color(0xFFFF1744)
-                else -> Color.Transparent
-            }
+            val backgroundColor by animateColorAsState(
+                targetValue = when (swipeToDismissBoxState.targetValue) {
+                    SwipeToDismissBoxValue.EndToStart -> Color.Red
+                    else -> Color.Transparent
+                }, label = ""
+            )
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color)
-                    .padding(12.dp, 8.dp),
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(backgroundColor)
+                    .padding(end = 10.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Удалить",
-                        tint = Color.White,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = Constants.DESCRIPTION_DELETE_ICON,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
             }
         },
         content = {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFFFF)),
+            NoteCard(
+                title = note.title,
+                onFavoriteClick = { isFavorite ->
+                    onIntentRemove(ChangeFavoriteStatus(note.id))
+                },
                 onClick = {
                     navController.navigate(NavRoute.Note.route + "/${note.id}")
                 },
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onCopyClick) {
-                        Icon(
-                            painter = painterResource(R.drawable.icon_copy),
-                            contentDescription = "Copy",
-                            tint = Color.Black
-                        )
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp)
-                    ) {
-                        Text(
-                            text = note.title,
-                            fontSize = 15.sp,
-                            style = MaterialTheme.typography.titleMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.calendar),
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = Color.Gray
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = DateUtils.formatDate(note.createdAt),
-                                fontSize = 10.sp,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
-                            )
-                        }
-                    }
-                    IconButton(onClick = { onIntent(ChangeFavoriteStatus(note.id)) }) {
-                        Icon(
-                            painter = painterResource(if (note.isFavorite) R.drawable.icon_red else R.drawable.save),
-                            contentDescription = "Favorite",
-                            tint = if (note.isFavorite) Color(0xFFD22B2B) else Color.Black
-                        )
-                    }
-                }
-            }
+                isFavorite = note.isFavorite,
+                createdAt = note.createdAt
+            )
         }
     )
 }
@@ -528,33 +537,33 @@ fun RecordingWaveAnimation(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewRecordingWaveAnimation() {
     RecordingWaveAnimation()
-}
+}*/
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewMainTopBar() {
     MainTopBar(searchQuery = "", onSearchQueryChange = {})
-}
+}*/
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewMainBottomBar() {
     val navController = rememberNavController()
     MainBottomBar(navController = navController)
-}
+}*/
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewMainFloatingButton() {
     val context = LocalContext.current
     MainFloatingButton(uiState = HomeUiState(), context = context, onIntent = {})
-}
+}*/
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewNoteList() {
     val navController = rememberNavController()
@@ -579,9 +588,9 @@ fun PreviewNoteList() {
         onIntent = {},
         paddingValues = PaddingValues()
     )
-}
+}*/
 
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun PreviewNoteItem() {
     val navController = rememberNavController()
@@ -597,5 +606,5 @@ fun PreviewNoteItem() {
         navController = navController,
         onIntent = {}
     )
-}
+}*/
 

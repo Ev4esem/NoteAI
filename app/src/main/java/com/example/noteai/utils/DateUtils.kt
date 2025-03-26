@@ -5,9 +5,13 @@ import java.util.Date
 import java.util.Locale
 
 object DateUtils {
-    fun formatDate(timesTamp: Long): String {
-        val sdf = SimpleDateFormat("MMM dd, yyyy", Locale("ru", "RU"))
-        val formattedDate = sdf.format(Date(timesTamp))
-        return formattedDate.replaceFirstChar { it.uppercase() }
+    private val formatter = SimpleDateFormat("dd MMM yyyy", Locale("ru", "RU"))
+
+    fun formatDate(timestamp: Long?): String {
+        return if (timestamp != null && timestamp > 0) {
+            formatter.format(Date(timestamp)).replaceFirstChar { it.uppercase() }
+        } else {
+            "Нет даты"
+        }
     }
 }
