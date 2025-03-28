@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NoteAI</string>
+    <string name="pattern_study_title">Учеба</string>
+    <string name="pattern_work_title">Работа</string>
 </resources>

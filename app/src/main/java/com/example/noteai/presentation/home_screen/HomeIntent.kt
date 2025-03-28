@@ -14,6 +14,12 @@ sealed interface HomeIntent {
 
     data class UpdateSearchQuery(val query: String) : HomeIntent
 
+    data class ChoosePattern(val patternState: PatternState): HomeIntent
+
+    data object ShowPatternsBottomSheet: HomeIntent
+
+    data object DismissPatternsBottomSheet: HomeIntent
+
     sealed interface AudioDialog : HomeIntent {
 
         data object AudioPermissionGranted : AudioDialog

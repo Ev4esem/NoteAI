@@ -3,16 +3,8 @@ package com.example.noteai.presentation.home_screen
 import android.Manifest
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +24,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,7 +42,6 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,24 +51,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.noteai.R
 import com.example.noteai.data.repository.AudioRecordingService
 import com.example.noteai.domain.entity.Note
+import com.example.noteai.presentation.components.AudioVisualizer
 import com.example.noteai.presentation.components.NoteCard
-import com.example.noteai.presentation.components.TitleTopBar
-import com.example.noteai.presentation.home_screen.HomeIntent.*
+import com.example.noteai.presentation.components.model.AmplitudeType
+import com.example.noteai.presentation.components.model.WaveformAlignment
+import com.example.noteai.presentation.home_screen.HomeIntent.AudioDialog
+import com.example.noteai.presentation.home_screen.HomeIntent.ChangeFavoriteStatus
+import com.example.noteai.presentation.home_screen.HomeIntent.ChoosePattern
+import com.example.noteai.presentation.home_screen.HomeIntent.DeleteNote
+import com.example.noteai.presentation.home_screen.HomeIntent.DismissPatternsBottomSheet
+import com.example.noteai.presentation.home_screen.HomeIntent.ShowPatternsBottomSheet
+import com.example.noteai.presentation.home_screen.HomeIntent.StartRecording
+import com.example.noteai.presentation.home_screen.HomeIntent.StopAndSendRecording
+import com.example.noteai.presentation.home_screen.HomeIntent.UpdateSearchQuery
 import com.example.noteai.presentation.navigation.NavRoute
 import com.example.noteai.presentation.permission_dialog.AudioRecorderPermissionScreen
 import com.example.noteai.utils.Constants
@@ -86,14 +84,12 @@ import com.example.noteai.utils.Constants.DESCRIPTION_MICROPHONE_ICON
 import com.example.noteai.utils.Constants.DESCRIPTION_OUTLINE_ICON
 import com.example.noteai.utils.Constants.TITLE_SEARCH_PLACEHOLDER
 import com.example.noteai.utils.Constants.TITLE_TEMPLATE
-import com.example.noteai.utils.Constants.TITLE_TEMPLATE_STUDY
 import com.example.noteai.utils.ObserveEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavController,
@@ -104,8 +100,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val permission = Manifest.permission.RECORD_AUDIO
-
-
 
     DisposableEffect(Unit) {
         onDispose {
@@ -136,7 +130,6 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        TitleTopBar(Constants.TITLE_MAIN_SCREEN)
         SearchNote(
             onSearch = { query ->
                 viewModel.handlerIntent(UpdateSearchQuery(query))
@@ -151,14 +144,11 @@ fun MainScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchNote(
     onSearch: (String) -> Unit,
-    searchQuery: String,
-
-    ) {
-
+    searchQuery: String
+) {
     TextField(
         value = searchQuery,
         onValueChange = { onSearch(it) },
@@ -212,11 +202,10 @@ fun SearchNote(
 @Composable
 fun MainFloatingButton(
     uiState: HomeUiState,
+    amplitudes: List<Int>,
     onIntent: (HomeIntent) -> Unit,
 ) {
-
     val context = LocalContext.current
-    var showSheet by remember { mutableStateOf(false) }
     val isRecorded =
         uiState.audioState == AudioState.NOT_RECORDED || uiState.audioState == AudioState.INITIAL
     var isRecording by remember { mutableStateOf(false) }
@@ -226,7 +215,8 @@ fun MainFloatingButton(
                 color = Color(0xFF1C2317),
                 shape = RoundedCornerShape(50.dp)
             ),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (uiState.loading) {
             CircularProgressIndicator(
@@ -287,10 +277,12 @@ fun MainFloatingButton(
             }
         }
         if (isRecording && !uiState.loading) {
-            RecordingWaveAnimation(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .align(Alignment.CenterVertically),
+            AudioVisualizer(
+                amplitudes = amplitudes,
+                waveformAlignment = WaveformAlignment.Center,
+                amplitudeType = AmplitudeType.Max,
+                spikeAnimationSpec = tween(80),
+                waveformBrush = SolidColor(Color.White),
             )
         } else if (!uiState.loading) {
             IconButton(
@@ -303,7 +295,7 @@ fun MainFloatingButton(
                     )
                     .size(56.dp),
                 onClick = {
-                    showSheet = true
+                    onIntent(ShowPatternsBottomSheet)
                 },
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = Color(0xFF38452D),
@@ -316,95 +308,94 @@ fun MainFloatingButton(
                 )
             }
         }
-        MyBottomSheet(showSheet) { showSheet = false }
+        if (uiState.isShowPatternsBottomSheet) {
+            PatternsBottomSheet(
+                currentPatternState = uiState.patternState,
+                onIntent = onIntent,
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyBottomSheet(showSheet: Boolean, onDismiss: () -> Unit) {
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-            shape = RoundedCornerShape(
-                topStart = 32.dp,
-                topEnd = 32.dp,
-                bottomEnd = 0.dp,
-                bottomStart = 0.dp
-            ),
-            containerColor = Color(0xFF38452D),
+fun PatternsBottomSheet(
+    currentPatternState: PatternState,
+    onIntent: (HomeIntent) -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = {
+            onIntent(DismissPatternsBottomSheet)
+        },
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        shape = RoundedCornerShape(
+            topStart = 32.dp,
+            topEnd = 32.dp,
+            bottomEnd = 0.dp,
+            bottomStart = 0.dp
+        ),
+        containerColor = Color(0xFF38452D),
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom = 68.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 68.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.Start
+            Text(
+                text = TITLE_TEMPLATE,
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+            )
+            Spacer(modifier = Modifier.height(25.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(
+                    16.dp,
+                ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    TITLE_TEMPLATE,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Color.White,
-                )
-                Spacer(modifier = Modifier.height(25.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        16.dp,
-                        Alignment.CenterHorizontally
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                PatternState.entries.forEach { pattern ->
+                    Card(
                         modifier = Modifier
                             .weight(1f)
-                            .height(132.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF2C3520)),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        Button(
-                            onClick = {},
-                            modifier = Modifier.padding(top = 12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF122505)),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                TITLE_TEMPLATE_STUDY,
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = Color(0xFFFFFFFF),
-                            )
+                            .height(130.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF2C3520)
+                        ),
+                        border = if (currentPatternState == pattern) BorderStroke(
+                            2.dp,
+                            Color.White
+                        ) else null,
+                        onClick = {
+                            onIntent(ChoosePattern(pattern))
+                        },
+                        content = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(top = 12.dp)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(Color(0xFF122505))
+                                    .align(Alignment.CenterHorizontally),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(10.dp),
+                                    text = stringResource(pattern.titleRes),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = Color(0xFFFFFFFF),
+                                )
+                            }
                         }
-                    }
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(132.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF2C3520)),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
-                        Button(
-                            onClick = {},
-                            modifier = Modifier.padding(top = 12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF122505)),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                Constants.TITLE_TEMPLATE_WORK, color = Color(0xFFFFFFFF),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
+                    )
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteList(
     notes: List<Note>,
@@ -476,7 +467,7 @@ fun NoteItem(
         content = {
             NoteCard(
                 title = note.title,
-                onFavoriteClick = { isFavorite ->
+                onFavoriteClick = {
                     onIntentRemove(ChangeFavoriteStatus(note.id))
                 },
                 onClick = {
@@ -488,123 +479,3 @@ fun NoteItem(
         }
     )
 }
-
-@Composable
-fun RecordingWaveAnimation(modifier: Modifier = Modifier) {
-    val waveAmplitude = remember { Animatable(0f) }
-    val infiniteTransition = rememberInfiniteTransition(label = "")
-
-    val waveHeight by infiniteTransition.animateFloat(
-        initialValue = 10f,
-        targetValue = 30f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = ""
-    )
-
-    val waveAlpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ), label = ""
-    )
-
-    LaunchedEffect(Unit) {
-        waveAmplitude.animateTo(1f, animationSpec = tween(500, easing = FastOutSlowInEasing))
-    }
-
-    Canvas(
-        modifier = modifier
-            .size(80.dp)
-    ) {
-        val centerY = size.height / 2
-        val waveCount = 6
-        val waveWidth = size.width / (waveCount * 2f)
-
-        for (i in 0 until waveCount) {
-            val x = i * waveWidth * 2
-            val height = waveHeight * waveAmplitude.value * (1f - (i % 2) * 0.3f)
-            drawRoundRect(
-                color = Color.White.copy(alpha = waveAlpha),
-                topLeft = Offset(x, centerY - height / 2),
-                size = Size(waveWidth, height),
-                cornerRadius = CornerRadius(50f, 50f)
-            )
-        }
-    }
-}
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewRecordingWaveAnimation() {
-    RecordingWaveAnimation()
-}*/
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewMainTopBar() {
-    MainTopBar(searchQuery = "", onSearchQueryChange = {})
-}*/
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewMainBottomBar() {
-    val navController = rememberNavController()
-    MainBottomBar(navController = navController)
-}*/
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewMainFloatingButton() {
-    val context = LocalContext.current
-    MainFloatingButton(uiState = HomeUiState(), context = context, onIntent = {})
-}*/
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewNoteList() {
-    val navController = rememberNavController()
-    NoteList(
-        notes = listOf(
-            Note(
-                id = 1,
-                title = "Заметка 1",
-                createdAt = System.currentTimeMillis(),
-                isFavorite = false,
-                description = "df"
-            ),
-            Note(
-                id = 2,
-                title = "Заметка 2",
-                createdAt = System.currentTimeMillis(),
-                isFavorite = true,
-                description = "ff"
-            )
-        ),
-        navController = navController,
-        onIntent = {},
-        paddingValues = PaddingValues()
-    )
-}*/
-
-/*@Preview(showBackground = true)
-@Composable
-fun PreviewNoteItem() {
-    val navController = rememberNavController()
-    NoteItem(
-        note = Note(
-            id = 1,
-            title = "Пример заметки",
-            createdAt = System.currentTimeMillis(),
-            isFavorite = true,
-            description = "ff"
-        ),
-        onCopyClick = {},
-        navController = navController,
-        onIntent = {}
-    )
-}*/
-

@@ -1,7 +1,6 @@
 package com.example.noteai.data.repository
 
 import android.content.Context
-import android.util.Log
 import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
@@ -11,6 +10,7 @@ import com.example.noteai.domain.repository.NoteRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -52,7 +52,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
         val jsonResponse = response.body?.string() ?: "Не тот текст"
 
         val audioResponse = Gson().fromJson(jsonResponse, AudioResponse::class.java)
-        Log.d("NoteRepositoryImpl", audioResponse.message)
         emit(audioResponse.message)
     }.flowOn(Dispatchers.IO)
 
@@ -89,6 +88,10 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
             notes.map { it.toDomain() }
         }
         return notes
+    }
+
+    override fun observeAmplitude(): SharedFlow<Int> {
+        return audioRecordingService.amplitudes
     }
 
     override suspend fun addNote(note: Note) {

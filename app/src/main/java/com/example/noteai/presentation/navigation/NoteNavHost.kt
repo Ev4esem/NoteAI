@@ -4,6 +4,7 @@ import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -12,6 +13,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.noteai.presentation.components.BackgroundContainer
 import com.example.noteai.presentation.components.BottomNavigationBar
+import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.favourite_screen.FavouriteIntent
 import com.example.noteai.presentation.favourite_screen.FavouriteScreen
 import com.example.noteai.presentation.favourite_screen.FavouriteViewModel
@@ -40,9 +42,14 @@ fun NotesNavHost(
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val isNoteScreen = currentRoute?.startsWith(NavRoute.Note.route) == true
-
+    val mainUiState by mainViewModel.uiState.collectAsState()
     Scaffold(
         floatingActionButtonPosition = FabPosition.Center,
+        topBar = {
+            TitleTopBar(
+                title = if (currentRoute == NavRoute.Main.route) "Домашний экран" else "Избранное"
+            )
+        },
         bottomBar = {
             if (!isNoteScreen) {
                 BottomNavigationBar(navController)
@@ -51,8 +58,9 @@ fun NotesNavHost(
         floatingActionButton = {
             if (currentRoute == NavRoute.Main.route) {
                 MainFloatingButton(
-                    uiState = mainViewModel.uiState.collectAsState().value,
-                    onIntent = onHomeIntent
+                    uiState = mainUiState,
+                    onIntent = onHomeIntent,
+                    amplitudes = mainViewModel.amplitudes,
                 )
             }
         }

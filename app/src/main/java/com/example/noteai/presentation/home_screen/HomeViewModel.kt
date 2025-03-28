@@ -1,5 +1,6 @@
 package com.example.noteai.presentation.home_screen
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.noteai.domain.entity.Note
@@ -7,6 +8,7 @@ import com.example.noteai.domain.usecase.AddNoteUseCase
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
 import com.example.noteai.domain.usecase.DeleteNoteUseCase
 import com.example.noteai.domain.usecase.GetAllNotesUseCase
+import com.example.noteai.domain.usecase.ObserveAmplitudeUseCase
 import com.example.noteai.domain.usecase.SearchNotesUseCase
 import com.example.noteai.domain.usecase.SendAudioUseCase
 import com.example.noteai.domain.usecase.StartRecordingUseCase
@@ -30,6 +32,7 @@ class HomeViewModel(
     private val stopRecordingUseCase: StopRecordingUseCase,
     private val sendAudioUseCase: SendAudioUseCase,
     private val addNoteUseCase: AddNoteUseCase,
+    private val observeAmplitudeUseCase: ObserveAmplitudeUseCase,
     private val getAllNotesUseCase: GetAllNotesUseCase,
     private val deleteNoteUseCase: DeleteNoteUseCase,
     private val searchNotesUseCase: SearchNotesUseCase,
@@ -39,9 +42,22 @@ class HomeViewModel(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     override val effectChannel: Channel<HomeEffect> = Channel()
+    private val _amplitudes = mutableStateListOf<Int>()
+    val amplitudes: List<Int> get() = _amplitudes.toList()
 
     init {
         loadAllNotes()
+    }
+
+    private fun observeAmplitude() {
+        viewModelScope.launch {
+            observeAmplitudeUseCase().collect { amp ->
+                _amplitudes.add(amp)
+                if (_amplitudes.size > 100) {
+                    _amplitudes.removeFirst()
+                }
+            }
+        }
     }
 
     override fun handlerIntent(intent: HomeIntent) {
@@ -64,7 +80,29 @@ class HomeViewModel(
                 is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
 
                 is HomeIntent.UpdateSearchQuery -> updateSearchQuery(intent.query)
+
+                is HomeIntent.ChoosePattern -> choosePattern(intent.patternState)
+
+                is HomeIntent.DismissPatternsBottomSheet -> dismissPatternsBottomSheet()
+
+                is HomeIntent.ShowPatternsBottomSheet -> showPatternsBottomSheet()
             }
+        }
+    }
+
+    private fun showPatternsBottomSheet() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isShowPatternsBottomSheet = true
+            )
+        }
+    }
+
+    private fun dismissPatternsBottomSheet() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isShowPatternsBottomSheet = false
+            )
         }
     }
 
@@ -116,6 +154,7 @@ class HomeViewModel(
                 audioState = AudioState.RECORDED
             )
         }
+        observeAmplitude()
     }
 
     private fun stopRecording() {
@@ -180,6 +219,15 @@ class HomeViewModel(
         } else {
             searchNotes(query)
         }
+    }
+
+    private fun choosePattern(patternState: PatternState) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                patternState = patternState,
+            )
+        }
+        dismissPatternsBottomSheet()
     }
 
     private fun searchNotes(query: String) {

@@ -32,7 +32,7 @@ import com.example.noteai.utils.DateUtils
 @Composable
 fun NoteCard(
     title: String,
-    onFavoriteClick: (Boolean) -> Unit,
+    onFavoriteClick: () -> Unit,
     onClick: () -> Unit,
     isFavorite: Boolean,
     createdAt: Long,
@@ -87,7 +87,7 @@ fun NoteCard(
                 }
             }
             IconButton(
-                onClick = { onFavoriteClick(isFavorite) }
+                onClick = { onFavoriteClick() }
             ) {
                 Icon(
                     painter = painterResource(if (isFavorite) R.drawable.icon_red else R.drawable.save),
