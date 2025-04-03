@@ -21,12 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.noteai.R
-import com.example.noteai.utils.Constants.COPY
-import com.example.noteai.utils.Constants.DESCRIPTION_CALENDAR_ICON
-import com.example.noteai.utils.Constants.NOTE_SAVE
 import com.example.noteai.utils.DateUtils
 
 @Composable
@@ -54,7 +52,7 @@ fun NoteCard(
         ) {
             Icon(
                 painter = painterResource(R.drawable.icon_copy),
-                contentDescription = COPY,
+                contentDescription = stringResource(R.string.copy),
                 tint = Color.Black
             )
             Column(
@@ -74,7 +72,7 @@ fun NoteCard(
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.calendar),
-                        contentDescription = DESCRIPTION_CALENDAR_ICON,
+                        contentDescription = stringResource(R.string.description_clear_icon),
                         modifier = Modifier.size(18.dp),
                         tint = Color.Gray
                     )
@@ -91,7 +89,7 @@ fun NoteCard(
             ) {
                 Icon(
                     painter = painterResource(if (isFavorite) R.drawable.icon_red else R.drawable.save),
-                    contentDescription = NOTE_SAVE,
+                    contentDescription = stringResource(R.string.note_save),
                     tint = if (isFavorite) Color(0xFFD22B2B) else Color.Black
                 )
             }

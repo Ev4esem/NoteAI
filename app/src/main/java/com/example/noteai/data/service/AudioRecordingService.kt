@@ -1,5 +1,6 @@
-package com.example.noteai.data.repository
+package com.example.noteai.data.service
 
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -46,6 +47,7 @@ class AudioRecordingService : Service(), KoinComponent {
         } else MediaRecorder()
     }
 
+
     fun startRecording(outputFile: File) {
         currentFile = outputFile
         createRecorder().apply {
@@ -63,9 +65,9 @@ class AudioRecordingService : Service(), KoinComponent {
         startAmplitudeUpdates()
     }
 
-    private fun startAmplitudeUpdates()  {
+    private fun startAmplitudeUpdates() {
         CoroutineScope(Dispatchers.IO).launch {
-            while(isRecording) {
+            while (isRecording) {
                 val amp = recorder?.maxAmplitude ?: 0
                 _amplitudes.tryEmit(amp)
                 delay(30)
@@ -99,7 +101,7 @@ class AudioRecordingService : Service(), KoinComponent {
 
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle("Recording in progress")
-        .setSmallIcon(android.R.drawable.ic_media_play)
+        .setSmallIcon(R.drawable.ic_media_play)
         .build()
 
 

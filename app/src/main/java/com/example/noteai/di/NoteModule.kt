@@ -1,8 +1,8 @@
 package com.example.noteai.di
 
-import com.example.noteai.data.repository.AudioRecordingService
 import com.example.noteai.data.repository.FavouriteRepositoryImpl
 import com.example.noteai.data.repository.NoteRepositoryImpl
+import com.example.noteai.data.service.AudioRecordingService
 import com.example.noteai.domain.repository.FavouriteRepository
 import com.example.noteai.domain.repository.NoteRepository
 import com.example.noteai.domain.usecase.AddNoteUseCase

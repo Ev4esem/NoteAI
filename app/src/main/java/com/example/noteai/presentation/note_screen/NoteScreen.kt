@@ -29,11 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.noteai.R
-import com.example.noteai.utils.Constants
-import com.example.noteai.utils.Constants.NOTE_SCREEN_BACK
 import kotlinx.coroutines.delay
 
 @Composable
@@ -87,7 +86,7 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.arrow),
-                        contentDescription = NOTE_SCREEN_BACK,
+                        contentDescription = stringResource(R.string.note_screen_back),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -96,7 +95,7 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
                 }) {
                     Icon(
                         imageVector = if (isEditing) Icons.Default.Done else Icons.Default.Edit,
-                        contentDescription = Constants.NOTE_SCREEN_EDIT,
+                        contentDescription = stringResource(R.string.note_screen_edit),
                         modifier = Modifier.size(24.dp)
                     )
                 }

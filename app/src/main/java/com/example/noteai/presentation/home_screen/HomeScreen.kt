@@ -45,8 +45,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,10 +61,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.noteai.R
-import com.example.noteai.data.repository.AudioRecordingService
+import com.example.noteai.data.service.AudioRecordingService
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.presentation.components.AudioVisualizer
 import com.example.noteai.presentation.components.NoteCard
+import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.components.model.AmplitudeType
 import com.example.noteai.presentation.components.model.WaveformAlignment
 import com.example.noteai.presentation.home_screen.HomeIntent.AudioDialog
@@ -78,12 +79,6 @@ import com.example.noteai.presentation.home_screen.HomeIntent.StopAndSendRecordi
 import com.example.noteai.presentation.home_screen.HomeIntent.UpdateSearchQuery
 import com.example.noteai.presentation.navigation.NavRoute
 import com.example.noteai.presentation.permission_dialog.AudioRecorderPermissionScreen
-import com.example.noteai.utils.Constants
-import com.example.noteai.utils.Constants.DESCRIPTION_CLEAR_ICON
-import com.example.noteai.utils.Constants.DESCRIPTION_MICROPHONE_ICON
-import com.example.noteai.utils.Constants.DESCRIPTION_OUTLINE_ICON
-import com.example.noteai.utils.Constants.TITLE_SEARCH_PLACEHOLDER
-import com.example.noteai.utils.Constants.TITLE_TEMPLATE
 import com.example.noteai.utils.ObserveEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -130,6 +125,7 @@ fun MainScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        TitleTopBar(stringResource(R.string.title_main_screen))
         SearchNote(
             onSearch = { query ->
                 viewModel.handlerIntent(UpdateSearchQuery(query))
@@ -154,7 +150,7 @@ fun SearchNote(
         onValueChange = { onSearch(it) },
         placeholder = {
             Text(
-                text = TITLE_SEARCH_PLACEHOLDER,
+                text = stringResource(R.string.title_search_placeholder),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White
             )
@@ -164,7 +160,7 @@ fun SearchNote(
         leadingIcon = {
             Icon(
                 painter = painterResource(id = R.drawable.search_icon),
-                contentDescription = Constants.DESCRIPTION_SEARCH_ICON,
+                contentDescription = stringResource(R.string.description_search_icon),
                 tint = Color.White
             )
         },
@@ -173,7 +169,7 @@ fun SearchNote(
                 IconButton(onClick = { onSearch("") }) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = DESCRIPTION_CLEAR_ICON,
+                        contentDescription = stringResource(R.string.description_clear_icon),
                         tint = Color.White
                     )
                 }
@@ -208,7 +204,7 @@ fun MainFloatingButton(
     val context = LocalContext.current
     val isRecorded =
         uiState.audioState == AudioState.NOT_RECORDED || uiState.audioState == AudioState.INITIAL
-    var isRecording by remember { mutableStateOf(false) }
+    var isRecording by rememberSaveable { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .background(
@@ -238,30 +234,36 @@ fun MainFloatingButton(
                     )
                     .size(56.dp),
                 onClick = {
-                    if (isRecorded) {
-                        if (uiState.audioPermissionState.isRecordingAllowing) {
+                    when {
+                        isRecorded && uiState.audioPermissionState.isRecordingAllowing -> {
                             val outputFile = File(
                                 context.filesDir,
                                 "audio_recording_${System.currentTimeMillis()}.mp4"
                             )
+                            isRecording = true
                             ContextCompat.startForegroundService(
                                 context,
                                 AudioRecordingService.newIntent(context)
                             )
                             onIntent(StartRecording(outputFile))
-                            isRecording = true
-                        } else if (!uiState.audioPermissionState.isShowAudioPermissionDialog) {
+                        }
+
+                        isRecorded && !uiState.audioPermissionState.isShowAudioPermissionDialog -> {
                             onIntent(AudioDialog.ShowAudioPermissionDialog)
-                        } else {
+                        }
+
+                        isRecorded -> {
                             Toast.makeText(
                                 context,
-                                Constants.AUDIO_PERMISSION_ERROR_MESSAGE,
+                                R.string.audio_permission_error_message,
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                    } else {
-                        onIntent(StopAndSendRecording)
-                        isRecording = false
+
+                        else -> {
+                            onIntent(StopAndSendRecording)
+                            isRecording = false
+                        }
                     }
                 },
                 colors = IconButtonDefaults.iconButtonColors(
@@ -271,7 +273,7 @@ fun MainFloatingButton(
             ) {
                 Icon(
                     painter = painterResource(id = if (isRecorded) R.drawable.microphone else R.drawable.vector_1),
-                    contentDescription = DESCRIPTION_MICROPHONE_ICON,
+                    contentDescription = stringResource(R.string.description_microphone_icon),
                 )
 
             }
@@ -304,7 +306,7 @@ fun MainFloatingButton(
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.outline),
-                    contentDescription = DESCRIPTION_OUTLINE_ICON,
+                    contentDescription = stringResource(R.string.description_outline_icon),
                 )
             }
         }
@@ -345,7 +347,7 @@ fun PatternsBottomSheet(
             horizontalAlignment = Alignment.Start
         ) {
             Text(
-                text = TITLE_TEMPLATE,
+                text = stringResource(R.string.title_template),
                 style = MaterialTheme.typography.headlineLarge,
                 color = Color.White,
             )
@@ -458,7 +460,7 @@ fun NoteItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = Constants.DESCRIPTION_DELETE_ICON,
+                    contentDescription = stringResource(R.string.description_delete_icon),
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
                 )

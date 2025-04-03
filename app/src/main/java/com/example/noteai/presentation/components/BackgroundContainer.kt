@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import com.example.noteai.R
-import com.example.noteai.utils.Constants.BACKGROUND_IMAGE
 
 @Composable
 fun BackgroundContainer(content: @Composable () -> Unit) {
@@ -17,7 +17,7 @@ fun BackgroundContainer(content: @Composable () -> Unit) {
     ) {
         Image(
             painter = painterResource(R.drawable.background),
-            contentDescription = BACKGROUND_IMAGE,
+            contentDescription = stringResource(R.string.background_image),
             contentScale = ContentScale.Crop,
         )
         content()

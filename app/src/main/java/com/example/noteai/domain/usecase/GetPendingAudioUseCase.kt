@@ -6,6 +6,6 @@ class GetPendingAudioUseCase(
     private val noteRepository: NoteRepository
 ) {
 
-    suspend operator fun invoke() = noteRepository.getPendingAudio()
+    operator fun invoke() = noteRepository.getPendingAudio()
 
 }

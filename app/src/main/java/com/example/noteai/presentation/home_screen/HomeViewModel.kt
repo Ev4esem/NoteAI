@@ -16,6 +16,7 @@ import com.example.noteai.domain.usecase.StopRecordingUseCase
 import com.example.noteai.utils.EffectHandler
 import com.example.noteai.utils.IntentHandler
 import com.example.noteai.utils.handlerError
+import com.example.noteai.utils.launchSafe
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,43 +51,41 @@ class HomeViewModel(
     }
 
     private fun observeAmplitude() {
-        viewModelScope.launch {
+        launchSafe {
             observeAmplitudeUseCase().collect { amp ->
                 _amplitudes.add(amp)
                 if (_amplitudes.size > 100) {
-                    _amplitudes.removeFirst()
+                    _amplitudes.removeAt(0)
                 }
             }
         }
     }
 
     override fun handlerIntent(intent: HomeIntent) {
-        viewModelScope.launch {
-            when (intent) {
-                is HomeIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
+        when (intent) {
+            is HomeIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
 
-                is HomeIntent.StartRecording -> startRecording(intent.file)
+            is HomeIntent.StartRecording -> startRecording(intent.file)
 
-                is HomeIntent.StopAndSendRecording -> uploadAudio()
+            is HomeIntent.StopAndSendRecording -> uploadAudio()
 
-                is HomeIntent.AudioDialog.ShowAudioPermissionDialog -> showAudioPermissionDialog()
+            is HomeIntent.AudioDialog.ShowAudioPermissionDialog -> showAudioPermissionDialog()
 
-                is HomeIntent.AudioDialog.AudioPermissionGranted -> audioPermissionGranted()
+            is HomeIntent.AudioDialog.AudioPermissionGranted -> audioPermissionGranted()
 
-                is HomeIntent.AudioDialog.DismissRationaleDialog -> dismissRationaleDialog()
+            is HomeIntent.AudioDialog.DismissRationaleDialog -> dismissRationaleDialog()
 
-                is HomeIntent.AudioDialog.ShowRationaleDialog -> showRationaleDialog()
+            is HomeIntent.AudioDialog.ShowRationaleDialog -> showRationaleDialog()
 
-                is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
+            is HomeIntent.DeleteNote -> deleteNote(intent.noteId)
 
-                is HomeIntent.UpdateSearchQuery -> updateSearchQuery(intent.query)
+            is HomeIntent.UpdateSearchQuery -> updateSearchQuery(intent.query)
 
-                is HomeIntent.ChoosePattern -> choosePattern(intent.patternState)
+            is HomeIntent.ChoosePattern -> choosePattern(intent.patternState)
 
-                is HomeIntent.DismissPatternsBottomSheet -> dismissPatternsBottomSheet()
+            is HomeIntent.DismissPatternsBottomSheet -> dismissPatternsBottomSheet()
 
-                is HomeIntent.ShowPatternsBottomSheet -> showPatternsBottomSheet()
-            }
+            is HomeIntent.ShowPatternsBottomSheet -> showPatternsBottomSheet()
         }
     }
 
@@ -168,7 +167,7 @@ class HomeViewModel(
 
     private fun uploadAudio() {
         stopRecording()
-        viewModelScope.launch {
+        launchSafe {
             sendAudioUseCase()
                 .onEach {
                     _uiState.update { currentState ->
@@ -188,24 +187,30 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun addNote(description: String) {
-        val newNote = Note(
-            id = System.currentTimeMillis(),
-            title = "Новый",
-            description = description,
-            isFavorite = false,
-            createdAt = System.currentTimeMillis()
-        )
+    private fun addNote(description: String) {
+        launchSafe {
+            val newNote = Note(
+                id = System.currentTimeMillis(),
+                title = "Заметка",
+                description = description,
+                isFavorite = false,
+                createdAt = System.currentTimeMillis()
+            )
 
-        addNoteUseCase(newNote)
+            addNoteUseCase(newNote)
+        }
     }
 
-    private suspend fun deleteNote(noteId: Long) {
-        deleteNoteUseCase(noteId)
+    private fun deleteNote(noteId: Long) {
+        launchSafe {
+            deleteNoteUseCase(noteId)
+        }
     }
 
-    private suspend fun changeFavoriteStatus(noteId: Long) {
-        changeFavoriteStatusUseCase(noteId)
+    private fun changeFavoriteStatus(noteId: Long) {
+        launchSafe {
+            changeFavoriteStatusUseCase(noteId)
+        }
     }
 
     private fun updateSearchQuery(query: String) {
@@ -231,7 +236,7 @@ class HomeViewModel(
     }
 
     private fun searchNotes(query: String) {
-        viewModelScope.launch {
+        launchSafe {
             searchNotesUseCase(query)
                 .onEach { notes ->
                     _uiState.update { currentState ->

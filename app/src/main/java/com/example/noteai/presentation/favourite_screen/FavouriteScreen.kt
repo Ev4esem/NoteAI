@@ -11,11 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.example.noteai.R
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.presentation.components.NoteCard
+import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.favourite_screen.FavouriteIntent.ChangeFavoriteStatus
 import com.example.noteai.presentation.navigation.NavRoute
 
@@ -32,6 +35,7 @@ fun FavouriteScreen(
             .fillMaxSize()
             .padding(paddingValues),
     ) {
+        TitleTopBar(stringResource(R.string.favourite_title))
         NoteList(
             notes = uiState.favouriteNotes,
             navController = navController,

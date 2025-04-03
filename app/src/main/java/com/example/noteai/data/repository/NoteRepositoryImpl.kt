@@ -4,15 +4,14 @@ import android.content.Context
 import com.example.noteai.data.local.db.NoteDao
 import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
+import com.example.noteai.data.service.AudioRecordingService
 import com.example.noteai.domain.entity.AudioResponse
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -53,7 +52,7 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
         val audioResponse = Gson().fromJson(jsonResponse, AudioResponse::class.java)
         emit(audioResponse.message)
-    }.flowOn(Dispatchers.IO)
+    }
 
 
     override fun startRecording(outputFile: File) {

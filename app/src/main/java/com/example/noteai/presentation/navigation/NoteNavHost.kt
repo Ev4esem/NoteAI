@@ -13,7 +13,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.noteai.presentation.components.BackgroundContainer
 import com.example.noteai.presentation.components.BottomNavigationBar
-import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.favourite_screen.FavouriteIntent
 import com.example.noteai.presentation.favourite_screen.FavouriteScreen
 import com.example.noteai.presentation.favourite_screen.FavouriteViewModel
@@ -45,11 +44,6 @@ fun NotesNavHost(
     val mainUiState by mainViewModel.uiState.collectAsState()
     Scaffold(
         floatingActionButtonPosition = FabPosition.Center,
-        topBar = {
-            TitleTopBar(
-                title = if (currentRoute == NavRoute.Main.route) "Домашний экран" else "Избранное"
-            )
-        },
         bottomBar = {
             if (!isNoteScreen) {
                 BottomNavigationBar(navController)

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.noteai.domain.usecase.ChangeFavouriteStatusUseCase
 import com.example.noteai.domain.usecase.GetFavouriteNotesUseCase
 import com.example.noteai.utils.IntentHandler
+import com.example.noteai.utils.launchSafe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,10 +22,8 @@ class FavouriteViewModel(
     val uiState: StateFlow<FavouriteUiState> = _uiState.asStateFlow()
 
     override fun handlerIntent(intent: FavouriteIntent) {
-        viewModelScope.launch {
-            when (intent) {
-                is FavouriteIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
-            }
+        when (intent) {
+            is FavouriteIntent.ChangeFavoriteStatus -> changeFavoriteStatus(intent.noteId)
         }
     }
 
@@ -34,27 +33,31 @@ class FavouriteViewModel(
         }
     }
 
-    private suspend fun changeFavoriteStatus(noteId: Long) {
-        changeFavoriteStatusUseCase(noteId)
+    private fun changeFavoriteStatus(noteId: Long) {
+        launchSafe {
+            changeFavoriteStatusUseCase(noteId)
+        }
     }
 
 
-    private suspend fun getFavouriteNotes() {
-        getFavouriteNotesUseCase()
-            .onEach {
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        loading = true
-                    )
+    private fun getFavouriteNotes() {
+        viewModelScope.launch {
+            getFavouriteNotesUseCase()
+                .onEach {
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            loading = true
+                        )
+                    }
                 }
-            }
-            .collect { favouriteNotes ->
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        favouriteNotes = favouriteNotes,
-                        loading = false,
-                    )
+                .collect { favouriteNotes ->
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            favouriteNotes = favouriteNotes,
+                            loading = false,
+                        )
+                    }
                 }
-            }
+        }
     }
 }

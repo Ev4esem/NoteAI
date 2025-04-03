@@ -4,7 +4,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.example.noteai.utils.Constants
+import androidx.compose.ui.res.stringResource
+import com.example.noteai.R
 
 @Composable
 fun AudioRecorderPermissionsDialog(
@@ -13,16 +14,16 @@ fun AudioRecorderPermissionsDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text((Constants.AUDIO_PERMISSION_DIALOG_TITLE)) },
-        text = { Text(Constants.AUDIO_PERMISSION_DIALOG_TEXT) },
+        title = { Text((stringResource(R.string.audio_permission_dialog_title))) },
+        text = { Text(stringResource(R.string.audio_permission_dialog_text)) },
         confirmButton = {
             Button(onClick = onRequestPermission) {
-                Text(Constants.AUDIO_PERMISSION_DIALOG_CONFIRM_BUTTON)
+                Text(stringResource(R.string.audio_permission_dialog_confirm_button))
             }
         },
         dismissButton = {
             Button(onClick = onDismiss) {
-                Text(Constants.AUDIO_PERMISSION_DIALOG_DISMISS_BUTTON)
+                Text(stringResource(R.string.audio_permission_dialog_dismiss_button))
             }
         }
     )
