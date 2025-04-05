@@ -1,5 +1,6 @@
-package com.example.noteai.data.repository
+package com.example.noteai.data.service
 
+import android.R
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
@@ -8,8 +9,14 @@ import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -23,6 +30,11 @@ class AudioRecordingService : Service(), KoinComponent {
 
     private var currentFile: File? = null
 
+    private val _amplitudes = MutableSharedFlow<Int>(extraBufferCapacity = 64)
+    val amplitudes: SharedFlow<Int> = _amplitudes.asSharedFlow()
+
+    private var isRecording = false
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -34,6 +46,7 @@ class AudioRecordingService : Service(), KoinComponent {
             MediaRecorder(context)
         } else MediaRecorder()
     }
+
 
     fun startRecording(outputFile: File) {
         currentFile = outputFile
@@ -48,6 +61,18 @@ class AudioRecordingService : Service(), KoinComponent {
 
             recorder = this
         }
+        isRecording = true
+        startAmplitudeUpdates()
+    }
+
+    private fun startAmplitudeUpdates() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (isRecording) {
+                val amp = recorder?.maxAmplitude ?: 0
+                _amplitudes.tryEmit(amp)
+                delay(30)
+            }
+        }
     }
 
     fun getCurrentAudio(): File? = currentFile
@@ -56,6 +81,7 @@ class AudioRecordingService : Service(), KoinComponent {
         recorder?.stop()
         recorder?.reset()
         recorder = null
+        isRecording = false
         stopSelf()
     }
 
@@ -63,21 +89,19 @@ class AudioRecordingService : Service(), KoinComponent {
         val notificationManager =
             this.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Audio Recording",
+                CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
-
     }
 
     private fun createNotification() = NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle("Recording in progress")
-        .setSmallIcon(android.R.drawable.ic_media_play)
+        .setSmallIcon(R.drawable.ic_media_play)
         .build()
 
 
@@ -85,6 +109,7 @@ class AudioRecordingService : Service(), KoinComponent {
 
     companion object {
         private const val CHANNEL_ID = "audio_recording_channel"
+        private const val CHANNEL_NAME = "Audio Recording"
         private const val NOTIFICATION_ID = 1
 
         fun newIntent(context: Context): Intent {

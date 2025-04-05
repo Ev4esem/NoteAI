@@ -14,11 +14,13 @@ koinVersion = "4.0.1"
 permissionsVersion = "0.37.0"
 okhttpVersion = "4.9.3"
 navigation = "2.8.7"
+uiTextGoogleFonts = "1.7.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
 # Koin
+androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koinVersion" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }

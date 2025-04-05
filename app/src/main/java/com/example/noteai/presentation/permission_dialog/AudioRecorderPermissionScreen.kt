@@ -5,19 +5,17 @@ import androidx.compose.runtime.LaunchedEffect
 import com.example.noteai.presentation.home_screen.HomeIntent
 import com.example.noteai.presentation.home_screen.HomeUiState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun AudioRecorderPermissionScreen(
-    permission: String,
+    permissionState: PermissionState,
     uiState: HomeUiState,
     onIntent: (HomeIntent.AudioDialog) -> Unit,
 ) {
-    val permissionState = rememberPermissionState(permission)
-
     LaunchedEffect(permissionState.status) {
         when {
             permissionState.status.isGranted -> {

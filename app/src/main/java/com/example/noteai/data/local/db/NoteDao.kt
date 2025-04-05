@@ -7,7 +7,6 @@ import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.domain.entity.Note
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import noteai.NoteDbEntity
 
 class NoteDao(
@@ -26,23 +25,20 @@ class NoteDao(
         .asFlow()
         .mapToList(Dispatchers.IO)
 
-    suspend fun changeFavouriteStatus(noteId: Long) = withContext(Dispatchers.IO) {
-        query.changeFavouriteStatus(noteId)
-    }
+    fun searchNotes(query: String): Flow<List<NoteDbEntity>> =
+        this.query.searchNotes("%$query%")
+            .asFlow()
+            .mapToList(Dispatchers.IO)
 
-    suspend fun getNoteById(noteId: Long): Note? = withContext(Dispatchers.IO) {
+    fun changeFavouriteStatus(noteId: Long) = query.changeFavouriteStatus(noteId)
+
+    fun getNoteById(noteId: Long): Note? =
         query.getNoteById(noteId).executeAsOneOrNull()?.toDomain()
-    }
 
-    suspend fun addNote(note: Note) = withContext(Dispatchers.IO) {
-        query.insertNote(note.toDbModel())
-    }
+    fun addNote(note: Note) = query.insertNote(note.toDbModel())
 
-    suspend fun updateNote(note: Note) = withContext(Dispatchers.IO) {
-        query.insertNote(note.toDbModel())
-    }
+    fun updateNote(note: Note) = query.insertNote(note.toDbModel())
 
-    suspend fun deleteNote(noteId: Long) = withContext(Dispatchers.IO) {
-        query.removeNote(noteId)
-    }
+    fun deleteNote(noteId: Long) = query.removeNote(noteId)
+
 }

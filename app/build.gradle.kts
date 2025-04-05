@@ -70,6 +70,8 @@ dependencies {
     // Permissions
     implementation(libs.accompanist.permissions)
 
+    implementation(libs.androidx.ui.text.google.fonts)
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

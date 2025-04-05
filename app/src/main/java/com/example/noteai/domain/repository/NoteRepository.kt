@@ -2,6 +2,7 @@ package com.example.noteai.domain.repository
 
 import com.example.noteai.domain.entity.Note
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import java.io.File
 
 interface NoteRepository {
@@ -10,15 +11,16 @@ interface NoteRepository {
 
     suspend fun getNoteById(noteId: Long): Note?
 
+    suspend fun searchNotes(query: String): Flow<List<Note>>
+
+    fun observeAmplitude(): SharedFlow<Int>
+
     fun uploadAudio(): Flow<String>
 
     fun startRecording(outputFile: File)
 
     fun stopRecording()
 
-    fun getPendingAudio(): File?
-
-    // TODO Удалить https://github.com/Ev4esem/NoteAI/issues/6
     fun getCurrentAudioFile(): File?
 
     suspend fun addNote(note: Note)

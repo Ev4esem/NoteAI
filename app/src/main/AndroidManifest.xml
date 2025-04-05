@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".data.repository.AudioRecordingService"
+            android:name=".data.service.AudioRecordingService"
             android:exported="false"
             android:foregroundServiceType="microphone"
             />

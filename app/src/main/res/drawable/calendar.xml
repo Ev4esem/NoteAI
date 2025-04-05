@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="17dp"
+    android:height="16dp"
+    android:viewportWidth="17"
+    android:viewportHeight="16">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M6.083,4L6.083,2.667"
+        android:strokeWidth="1"
+        android:strokeColor="#808080"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M11.417,4L11.417,2.667"
+        android:strokeWidth="1"
+        android:strokeColor="#808080"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M14.083,6.667L3.417,6.667"
+        android:strokeWidth="1"
+        android:strokeColor="#808080"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M7.417,4L10.083,4A4.667,4.667 0,0 1,14.75 8.667L14.75,8.667A4.667,4.667 0,0 1,10.083 13.333L7.417,13.333A4.667,4.667 0,0 1,2.75 8.667L2.75,8.667A4.667,4.667 0,0 1,7.417 4z"
+        android:strokeWidth="1"
+        android:strokeColor="#808080"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:fillColor="#808080"
+        android:pathData="M8.75,8.667L8.75,8.667A0.667,0.667 0,0 1,9.417 9.334L9.417,9.334A0.667,0.667 0,0 1,8.75 10L8.75,10A0.667,0.667 0,0 1,8.083 9.334L8.083,9.334A0.667,0.667 0,0 1,8.75 8.667z" />
+    <path
+        android:fillColor="#808080"
+        android:pathData="M11.417,8.667L11.417,8.667A0.667,0.667 0,0 1,12.083 9.334L12.083,9.334A0.667,0.667 0,0 1,11.417 10L11.417,10A0.667,0.667 0,0 1,10.75 9.334L10.75,9.334A0.667,0.667 0,0 1,11.417 8.667z" />
+    <path
+        android:fillColor="#808080"
+        android:pathData="M6.083,8.667L6.083,8.667A0.667,0.667 0,0 1,6.75 9.334L6.75,9.334A0.667,0.667 0,0 1,6.083 10L6.083,10A0.667,0.667 0,0 1,5.417 9.334L5.417,9.334A0.667,0.667 0,0 1,6.083 8.667z" />
+</vector>

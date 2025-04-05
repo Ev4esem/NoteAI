@@ -27,7 +27,8 @@ class MainActivity : ComponentActivity() {
                     favouriteViewModel = favouriteViewModel,
                     noteViewModel = noteViewModel,
                     navController = navController,
-                    onIntent = mainViewModel::handlerIntent
+                    onHomeIntent = mainViewModel::handlerIntent,
+                    onFavouriteIntent = favouriteViewModel::handlerIntent
                 )
             }
         }

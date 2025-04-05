@@ -1,18 +1,15 @@
 package com.example.noteai.data.repository
 
-import android.content.Context
-import android.util.Log
 import com.example.noteai.data.local.db.NoteDao
-import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
+import com.example.noteai.data.service.AudioRecordingService
 import com.example.noteai.domain.entity.AudioResponse
 import com.example.noteai.domain.entity.Note
 import com.example.noteai.domain.repository.NoteRepository
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -27,7 +24,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     private val noteDao by inject<NoteDao>()
     private val audioRecordingService by inject<AudioRecordingService>()
-    private val context by inject<Context>()
     private val okHttp by inject<OkHttpClient>()
 
     override fun uploadAudio(): Flow<String> = flow {
@@ -52,9 +48,8 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
         val jsonResponse = response.body?.string() ?: "Не тот текст"
 
         val audioResponse = Gson().fromJson(jsonResponse, AudioResponse::class.java)
-        Log.d("NoteRepositoryImpl", audioResponse.message)
         emit(audioResponse.message)
-    }.flowOn(Dispatchers.IO)
+    }
 
 
     override fun startRecording(outputFile: File) {
@@ -63,10 +58,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     override fun stopRecording() {
         audioRecordingService.stopRecording()
-    }
-
-    override fun getPendingAudio(): File? {
-        return getUnsentAudioPath(context)?.let { File(it) }
     }
 
     override fun getCurrentAudioFile(): File? {
@@ -82,6 +73,17 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     override suspend fun getNoteById(noteId: Long): Note? {
         return noteDao.getNoteById(noteId)
+    }
+
+    override suspend fun searchNotes(query: String): Flow<List<Note>> {
+        val notes = noteDao.searchNotes(query).map { notes ->
+            notes.map { it.toDomain() }
+        }
+        return notes
+    }
+
+    override fun observeAmplitude(): SharedFlow<Int> {
+        return audioRecordingService.amplitudes
     }
 
     override suspend fun addNote(note: Note) {

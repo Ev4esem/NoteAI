@@ -36,3 +36,8 @@ CREATE TABLE IF NOT EXISTS noteDbEntity (
                             ELSE 0
                           END
             WHERE id = ?;
+
+            searchNotes:
+            SELECT *
+            FROM noteDbEntity
+            WHERE title LIKE '%' || ? || '%';

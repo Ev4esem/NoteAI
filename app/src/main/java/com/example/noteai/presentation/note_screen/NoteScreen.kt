@@ -2,26 +2,41 @@ package com.example.noteai.presentation.note_screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.example.noteai.domain.entity.Note
+import androidx.navigation.NavHostController
+import com.example.noteai.R
 
 @Composable
-fun NoteScreen(noteId: Long?, viewModel: NoteViewModel) {
+fun NoteScreen(
+    noteId: Long?,
+    viewModel: NoteViewModel,
+    navController: NavHostController
+) {
 
     LaunchedEffect(noteId) {
         viewModel.getNoteById(noteId)
@@ -37,52 +52,95 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel) {
     val note = uiState.note
 
     if (note != null) {
-
-        var titleState by remember { mutableStateOf(note.title) }
-        var descriptionState by remember { mutableStateOf(note.description) }
-
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .padding(top = 24.dp, start = 24.dp, end = 24.dp)
+                .paint(painterResource(R.drawable.background))
         ) {
-            Text(text = "Название:")
-            TextField(
-                value = titleState,
-                onValueChange = { titleState = it },
+            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
-            Text(text = "Описание:")
-            TextField(
-                value = descriptionState,
-                onValueChange = { descriptionState = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-            )
-            Button(
-                onClick = {
-                    val updatedNote = Note(
-                            id = note.id,
-                            title = titleState,
-                            description = descriptionState,
-                            isFavorite = note.isFavorite,
-                            createdAt = note.createdAt
-                        )
-
-                    viewModel.handlerIntent(
-                        NoteIntent.UpdateNote(
-                            updatedNote = updatedNote
-                        )
-                    )
-                },
-                modifier = Modifier.padding(top = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "Сохранить изменения")
+                IconButton(
+                    onClick = { navController.navigateUp() },
+                    modifier = Modifier
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.arrow),
+                        contentDescription = stringResource(R.string.note_screen_back),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        viewModel.handlerIntent(NoteIntent.ChangeEditMode)
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (uiState.isEditing) Icons.Default.Done else Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.note_screen_edit),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
-            Text(text = "Дата создания: ${note.createdAt}")
+            Spacer(modifier = Modifier.height(28.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                TextField(
+                    value = note.title,
+                    onValueChange = { newValue ->
+                        viewModel.handlerIntent(
+                            NoteIntent.ChangeTitle(newValue)
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    readOnly = !uiState.isEditing,
+                    colors = TextFieldDefaults.colors(
+                        disabledIndicatorColor = Color.Transparent,
+                        disabledLabelColor = Color.Transparent,
+                        disabledTextColor = Color.Black,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                )
+
+                TextField(
+                    value = note.description,
+                    onValueChange = { newValue ->
+                        viewModel.handlerIntent(
+                            NoteIntent.ChangeDescription(newValue)
+                        )
+                    },
+                    textStyle = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    readOnly = !uiState.isEditing,
+                    colors = TextFieldDefaults.colors(
+                        disabledIndicatorColor = Color.Transparent,
+                        disabledLabelColor = Color.Transparent,
+                        disabledTextColor = Color.Black,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                )
+            }
         }
     }
 }

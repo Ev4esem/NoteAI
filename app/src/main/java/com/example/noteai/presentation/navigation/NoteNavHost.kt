@@ -6,6 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.noteai.presentation.favourite_screen.FavouriteIntent
 import com.example.noteai.presentation.favourite_screen.FavouriteScreen
 import com.example.noteai.presentation.favourite_screen.FavouriteViewModel
 import com.example.noteai.presentation.home_screen.HomeIntent
@@ -16,9 +17,9 @@ import com.example.noteai.presentation.note_screen.NoteViewModel
 import com.example.noteai.utils.Constants
 
 sealed class NavRoute(val route: String) {
-    data object Main : NavRoute("main_screen")
-    data object Favourite : NavRoute("favourite_screen")
-    data object Note : NavRoute("note_screen")
+    data object Main : NavRoute(Constants.SCREEN_MAIN)
+    data object Favourite : NavRoute(Constants.SCREEN_FAVOURITE)
+    data object Note : NavRoute(Constants.SCREEN_NOTE)
 }
 
 @Composable
@@ -27,14 +28,23 @@ fun NotesNavHost(
     favouriteViewModel: FavouriteViewModel,
     noteViewModel: NoteViewModel,
     navController: NavHostController,
-    onIntent: (HomeIntent) -> Unit
+    onHomeIntent: (HomeIntent) -> Unit,
+    onFavouriteIntent: (FavouriteIntent) -> Unit
 ) {
     NavHost(navController = navController, startDestination = NavRoute.Main.route) {
         composable(NavRoute.Main.route) {
-            MainScreen(navController, viewModel = mainViewModel, onIntent = onIntent)
+            MainScreen(
+                navController = navController,
+                viewModel = mainViewModel,
+                onIntent = onHomeIntent,
+            )
         }
         composable(NavRoute.Favourite.route) {
-            FavouriteScreen(viewModel = favouriteViewModel)
+            FavouriteScreen(
+                viewModel = favouriteViewModel,
+                navController = navController,
+                onIntent = onFavouriteIntent,
+            )
         }
         composable(
             route = NavRoute.Note.route + "/{${Constants.NOTE_ID}}",
@@ -51,6 +61,7 @@ fun NotesNavHost(
             NoteScreen(
                 viewModel = noteViewModel,
                 noteId = noteId,
+                navController = navController,
             )
         }
     }
