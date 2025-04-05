@@ -1,8 +1,6 @@
 package com.example.noteai.data.repository
 
-import android.content.Context
 import com.example.noteai.data.local.db.NoteDao
-import com.example.noteai.data.local.getUnsentAudioPath
 import com.example.noteai.data.mapper.toDomain
 import com.example.noteai.data.service.AudioRecordingService
 import com.example.noteai.domain.entity.AudioResponse
@@ -26,7 +24,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     private val noteDao by inject<NoteDao>()
     private val audioRecordingService by inject<AudioRecordingService>()
-    private val context by inject<Context>()
     private val okHttp by inject<OkHttpClient>()
 
     override fun uploadAudio(): Flow<String> = flow {
@@ -61,10 +58,6 @@ class NoteRepositoryImpl : NoteRepository, KoinComponent {
 
     override fun stopRecording() {
         audioRecordingService.stopRecording()
-    }
-
-    override fun getPendingAudio(): File? {
-        return getUnsentAudioPath(context)?.let { File(it) }
     }
 
     override fun getCurrentAudioFile(): File? {

@@ -2,11 +2,11 @@ package com.example.noteai.presentation.favourite_screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.noteai.R
 import com.example.noteai.domain.entity.Note
+import com.example.noteai.presentation.components.BottomNavigationBar
 import com.example.noteai.presentation.components.NoteCard
 import com.example.noteai.presentation.components.TitleTopBar
 import com.example.noteai.presentation.favourite_screen.FavouriteIntent.ChangeFavoriteStatus
@@ -27,20 +28,31 @@ fun FavouriteScreen(
     viewModel: FavouriteViewModel,
     navController: NavHostController,
     onIntent: (FavouriteIntent) -> Unit,
-    paddingValues: PaddingValues
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues),
+    Scaffold(
+        topBar = {
+            TitleTopBar(
+               title = stringResource(R.string.favourite_title)
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                navController = navController,
+            )
+        }
     ) {
-        TitleTopBar(stringResource(R.string.favourite_title))
-        NoteList(
-            notes = uiState.favouriteNotes,
-            navController = navController,
-            onIntent = onIntent,
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+        ) {
+            NoteList(
+                notes = uiState.favouriteNotes,
+                navController = navController,
+                onIntent = onIntent,
+            )
+        }
     }
 }
 

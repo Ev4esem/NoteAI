@@ -29,6 +29,7 @@ import com.example.noteai.utils.DateUtils
 
 @Composable
 fun NoteCard(
+    modifier: Modifier = Modifier,
     title: String,
     onFavoriteClick: () -> Unit,
     onClick: () -> Unit,
@@ -36,7 +37,7 @@ fun NoteCard(
     createdAt: Long,
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(83.dp)
             .border(1.dp, Color(0xFF38452D), RoundedCornerShape(20.dp)),

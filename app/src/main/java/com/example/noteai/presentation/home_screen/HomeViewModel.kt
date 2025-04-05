@@ -196,7 +196,6 @@ class HomeViewModel(
                 isFavorite = false,
                 createdAt = System.currentTimeMillis()
             )
-
             addNoteUseCase(newNote)
         }
     }

@@ -43,13 +43,49 @@ open class NoteViewModel(
 
     override fun handlerIntent(intent: NoteIntent) {
         when (intent) {
-            is NoteIntent.UpdateNote -> updateNote(intent.updatedNote)
+            is NoteIntent.ChangeEditMode -> changeEditMode()
+            is NoteIntent.ChangeDescription -> changeDescription(intent.description)
+            is NoteIntent.ChangeTitle -> changeTitle(intent.title)
         }
     }
 
-    private fun updateNote(note: Note) {
+    private fun changeDescription(description: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                note = currentState.note?.copy(
+                    description = description
+                )
+            )
+        }
+    }
+
+    private fun changeTitle(title: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                note = currentState.note?.copy(
+                    title = title
+                )
+            )
+        }
+    }
+
+    private fun changeEditMode() {
+        _uiState.update { currentState ->
+            if (currentState.isEditing) {
+                updateNote(
+                    note = currentState.note
+                )
+            }
+            currentState.copy(
+                isEditing = !currentState.isEditing
+            )
+        }
+    }
+
+    private fun updateNote(note: Note?) {
+        val noteNotNull = note ?: throw IllegalArgumentException("note == null")
         launchSafe {
-            updateNoteUseCase(note)
+            updateNoteUseCase(noteNotNull)
         }
     }
 }

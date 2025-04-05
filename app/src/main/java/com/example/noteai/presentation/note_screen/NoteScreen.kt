@@ -21,9 +21,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.paint
@@ -33,10 +30,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.noteai.R
-import kotlinx.coroutines.delay
 
 @Composable
-fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostController) {
+fun NoteScreen(
+    noteId: Long?,
+    viewModel: NoteViewModel,
+    navController: NavHostController
+) {
 
     LaunchedEffect(noteId) {
         viewModel.getNoteById(noteId)
@@ -52,24 +52,6 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
     val note = uiState.note
 
     if (note != null) {
-
-        var titleState by remember { mutableStateOf(note.title) }
-        var descriptionState by remember { mutableStateOf(note.description) }
-        var isEditing by remember { mutableStateOf(false) }
-
-        LaunchedEffect(titleState, descriptionState) {
-            if (isEditing) {
-                delay(500)
-                viewModel.handlerIntent(
-                    NoteIntent.UpdateNote(
-                        updatedNote = note.copy(
-                            title = titleState,
-                            description = descriptionState
-                        )
-                    )
-                )
-            }
-        }
         Column(
             modifier = Modifier
                 .padding(top = 24.dp, start = 24.dp, end = 24.dp)
@@ -90,11 +72,13 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                IconButton(onClick = {
-                    isEditing = !isEditing
-                }) {
+                IconButton(
+                    onClick = {
+                        viewModel.handlerIntent(NoteIntent.ChangeEditMode)
+                    }
+                ) {
                     Icon(
-                        imageVector = if (isEditing) Icons.Default.Done else Icons.Default.Edit,
+                        imageVector = if (uiState.isEditing) Icons.Default.Done else Icons.Default.Edit,
                         contentDescription = stringResource(R.string.note_screen_edit),
                         modifier = Modifier.size(24.dp)
                     )
@@ -108,12 +92,16 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
                 verticalArrangement = Arrangement.Center
             ) {
                 TextField(
-                    value = titleState,
-                    onValueChange = { if (isEditing) titleState = it },
+                    value = note.title,
+                    onValueChange = { newValue ->
+                        viewModel.handlerIntent(
+                            NoteIntent.ChangeTitle(newValue)
+                        )
+                    },
                     textStyle = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier
                         .fillMaxWidth(),
-                    enabled = isEditing,
+                    readOnly = !uiState.isEditing,
                     colors = TextFieldDefaults.colors(
                         disabledIndicatorColor = Color.Transparent,
                         disabledLabelColor = Color.Transparent,
@@ -129,12 +117,16 @@ fun NoteScreen(noteId: Long?, viewModel: NoteViewModel, navController: NavHostCo
                 )
 
                 TextField(
-                    value = descriptionState,
-                    onValueChange = { if (isEditing) descriptionState = it },
+                    value = note.description,
+                    onValueChange = { newValue ->
+                        viewModel.handlerIntent(
+                            NoteIntent.ChangeDescription(newValue)
+                        )
+                    },
                     textStyle = MaterialTheme.typography.labelLarge,
                     modifier = Modifier
                         .fillMaxWidth(),
-                    enabled = isEditing,
+                    readOnly = !uiState.isEditing,
                     colors = TextFieldDefaults.colors(
                         disabledIndicatorColor = Color.Transparent,
                         disabledLabelColor = Color.Transparent,

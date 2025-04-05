@@ -21,8 +21,6 @@ interface NoteRepository {
 
     fun stopRecording()
 
-    fun getPendingAudio(): File?
-
     fun getCurrentAudioFile(): File?
 
     suspend fun addNote(note: Note)
