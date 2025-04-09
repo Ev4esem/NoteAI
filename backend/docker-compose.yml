@@ -1,0 +1,43 @@
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181"
+    networks:
+      - app-tier
+
+  kafka:
+    image: bitnami/kafka:2.8.1
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_LOG_RETENTION_MS=172800000
+    expose:
+      - "9092"
+    depends_on:
+      - zookeeper
+    networks:
+      - app-tier
+
+  noteai:
+    build:
+      dockerfile: Dockerfile
+    image: noteai:v1
+    ports:
+      - "8005:8005"
+    networks:
+      - app-tier
+    restart: always
+    depends_on:
+      - kafka
+    command: sh -c "echo '⏳ Ждём Kafka...' && sleep 20 && ./app"
+
+
+networks:
+  app-tier:
+    driver: bridge
