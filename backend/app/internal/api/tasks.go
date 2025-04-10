@@ -35,6 +35,12 @@ func tasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, task := range resTasks {
+		if task.State == "ready" {
+			storage.DeleteTask(task.ID)
+		}
+	}
+
 	respJson, err := json.Marshal(resTasks)
 	if err != nil {
 		http.Error(w, "Error marshall Json", http.StatusInternalServerError)

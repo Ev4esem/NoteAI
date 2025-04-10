@@ -68,6 +68,7 @@ func Consumer() {
 			log.Println("⚠️ Ошибка коммита:", err)
 			continue
 		}
+		miniio.DeleteAudio(objectName)
 
 		log.Printf("✅ Готово: %s", audioID)
 	}

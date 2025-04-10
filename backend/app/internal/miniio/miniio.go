@@ -62,3 +62,7 @@ func DownloadFromMinIO(objectName string) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
+
+func DeleteAudio(objectName string) {
+	minioClient.RemoveObject(context.Background(), "audio", objectName, minio.RemoveObjectOptions{})
+}

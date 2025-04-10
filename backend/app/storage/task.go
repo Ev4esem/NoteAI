@@ -12,6 +12,11 @@ func AddTask(id string) error {
 	return err
 }
 
+func DeleteTask(id string) {
+	query := `DELETE FROM tasks WHERE id = ?`
+	DB.Exec(query, id)
+}
+
 func SetErrorState(id, content string) error {
 	query := `UPDATE tasks SET state = 'error', content = ? WHERE id = ?`
 	_, err := DB.Exec(query, content, id)
