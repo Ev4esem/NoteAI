@@ -16,11 +16,21 @@ services:
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_CFG_BROKER_ID=1
-      - KAFKA_CFG_LOG_RETENTION_MS=172800000
     expose:
       - "9092"
     depends_on:
       - zookeeper
+    networks:
+      - app-tier
+
+  minio:
+    image: 'bitnami/minio:2025.4.8'
+    container_name: minio
+    expose:
+      - "9000"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
     networks:
       - app-tier
 
@@ -36,7 +46,6 @@ services:
     depends_on:
       - kafka
     command: sh -c "echo '⏳ Ждём Kafka...' && sleep 20 && ./app"
-
 
 networks:
   app-tier:

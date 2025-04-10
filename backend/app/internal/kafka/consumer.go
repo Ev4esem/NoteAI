@@ -6,11 +6,14 @@ import (
 	"log"
 	"noteai/config"
 	"noteai/internal/gpt"
+	"noteai/internal/miniio"
 	"noteai/storage"
 )
 
 func Consumer() {
 	ctx := context.Background()
+	miniio.StartMinIO()
+
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{url},
 		Topic:   topic,
@@ -25,41 +28,47 @@ func Consumer() {
 			continue
 		}
 
-		kafkaKey := string(msg.Key)
+		audioID := string(msg.Key)     // UUID
+		extension := string(msg.Value) // .mp3 /
 
-		log.Printf("📥 Получено: \n %s: %s", kafkaKey)
+		objectName := audioID + extension
+
+		log.Printf("📥 Обработка ID: %s", audioID)
+
+		audioData, err := miniio.DownloadFromMinIO(objectName)
+		if err != nil {
+			log.Println("❌ Ошибка загрузки из MinIO:", err)
+			storage.SetErrorState(audioID, "Не удалось получить аудио из хранилища")
+			continue
+		}
 
 		// 1 этап обработка аудио
-		txtWhisper, errWhisp := gpt.CallChatGptWhisper(config.AppConfig.CHATGPT, msg.Value)
-		if txtWhisper == "" {
-			err := storage.SetErrorState(kafkaKey, "Не получилось обработать аудио файл"+errWhisp.Error())
-			if err != nil {
-				log.Println("Не удалось сохранить изменения в бд" + err.Error())
-				continue
-			}
+		txtWhisper, errWhisp := gpt.CallChatGptWhisper(config.AppConfig.CHATGPT, objectName, audioData)
+		if txtWhisper == "" || errWhisp != nil {
+			log.Println("❌ Whisper ошибка:", errWhisp)
+			storage.SetErrorState(audioID, "Ошибка обработки Whisper: "+errWhisp.Error())
+			continue
 		}
 
 		// 2 этап обработка текста
-		respGPT, errWhisp := gpt.CallChatGPT(config.AppConfig.CHATGPT, txtWhisper)
-		if respGPT == "" {
-			err := storage.SetErrorState(kafkaKey, "ИИ не ответил попробуйте еще"+errWhisp.Error())
-			if err != nil {
-				log.Println("Не удалось сохранить изменения в бд" + err.Error())
-				continue
-			}
+		respGPT, errGPT := gpt.CallAssistant(txtWhisper)
+		if respGPT == nil || *respGPT == "" || errGPT != nil {
+			log.Println("❌ Assistant ошибка:", errGPT)
+			storage.SetErrorState(audioID, "Ошибка обработки ChatGPT: "+errGPT.Error())
+			continue
 		}
 
-		errWriteReadyState := storage.SetReadyState(kafkaKey, respGPT)
+		errWriteReadyState := storage.SetReadyState(audioID, *respGPT)
 		if errWriteReadyState != nil {
-			log.Println("Не удалось сохранить изменения в бд" + err.Error())
+			log.Println("❌ Ошибка записи результата:", err)
 			continue
 		}
 
-		errCommit := reader.CommitMessages(ctx, msg)
-		if errCommit != nil {
-			log.Println("Ошибка при коммите:", errCommit)
+		if err := reader.CommitMessages(ctx, msg); err != nil {
+			log.Println("⚠️ Ошибка коммита:", err)
 			continue
 		}
-		log.Println("Сообщение закомичено и задача выполнена успешно!")
+
+		log.Printf("✅ Готово: %s", audioID)
 	}
 }

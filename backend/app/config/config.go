@@ -8,12 +8,15 @@ import (
 )
 
 type Config struct {
-	PORT    string
-	CHATGPT string
+	PORT         string
+	CHATGPT      string
+	ASSISTAND_ID string
 
 	PROXY_URL string
 
 	KAFKA_HOST string
+
+	MINIIO_HOST string
 }
 
 var AppConfig Config

@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"io"
+	"log"
 	"net/http"
 	"noteai/internal/kafka"
+	"noteai/internal/miniio"
 	"noteai/storage"
+	"path/filepath"
 	"time"
 )
 
@@ -29,29 +31,47 @@ func processAudio(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем файл из формы
-	file, _, err := r.FormFile("file")
+	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, "Ошибка получения файла", http.StatusBadRequest)
 		return
 	}
-
-	contentFile, errReadFile := io.ReadAll(file)
-	if errReadFile != nil {
-		http.Error(w, "Ошибка при попытке прочитать файл"+errReadFile.Error(), http.StatusBadRequest)
-	}
+	defer file.Close()
 
 	newAudioId := uuid.New()
+	ext := filepath.Ext(fileHeader.Filename)
+	if ext == "" {
+		ext = ".mp3" // fallback по умолчанию
+	}
+	objectName := newAudioId.String() + ext
+
+	// Загружаем файл в MinIO
+	uploadInfo, err := miniio.UploadToMinIO(file, fileHeader, objectName)
+	if err != nil {
+		http.Error(w, "Ошибка загрузки в MinIO: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Println("Загружен файл в MinIO:", uploadInfo)
+
+	// Сохраняем задачу в БД
+	errAddTask := storage.AddTask(newAudioId.String())
+	if errAddTask != nil {
+		http.Error(w, "Ошибка записи задачи "+errAddTask.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем UUID в Kafka запись в брокер сообщений
+	var kafkaMess kafka.Message
+	kafkaMess.Key = []byte(newAudioId.String())
+	kafkaMess.Value = []byte(ext)
+	kafka.Producer(kafkaMess)
 
 	response := map[string]string{
 		"message":  "Аудиофайл загружен и уже обрабатывается",
 		"audio_id": newAudioId.String(),
 		"status":   "wait",
 	}
-	jsonResponse, errMarsh := json.Marshal(response)
-	if errMarsh != nil {
-		http.Error(w, "Произошла непредвиденная ошибка "+errMarsh.Error(), http.StatusInternalServerError)
-		return
-	}
+	jsonResponse, _ := json.Marshal(response)
 
 	// Запись ответа
 	w.Header().Set("Content-Type", "application/json")
@@ -61,19 +81,6 @@ func processAudio(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка записи ответа "+errWrite.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	errAddTask := storage.AddTask(newAudioId.String())
-	if errAddTask != nil {
-		http.Error(w, "Ошибка записи задачи "+errWrite.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// запись в брокер сообщений
-	var kafkaMess kafka.Message
-	kafkaMessKey := []byte(newAudioId.String())
-	kafkaMess.Key = kafkaMessKey
-	kafkaMess.Value = contentFile
-	kafka.Producer(kafkaMess)
 
 	time.Sleep(2 * time.Second)
 }

@@ -8,19 +8,22 @@ import (
 	"noteai/config"
 	"noteai/internal/api"
 	"noteai/internal/kafka"
+	"noteai/internal/miniio"
 	"noteai/storage"
 )
 
 func init() {
 	config.LoadLoading(".env")
 
-	log.Println("kafka port: " + config.AppConfig.KAFKA_HOST)
-
 	err := storage.InitDB("./tasks.db")
 	if err != nil {
 		log.Fatalf("init db err: %v", err)
 	}
 
+	// minio
+	miniio.StartMinIO()
+
+	// kafka
 	kafka.InitTopic()
 	go kafka.Consumer()
 
@@ -34,8 +37,11 @@ func main() {
 		Handler: setupRouter(),
 	}
 
-	log.Printf("Server is running on http://localhost:%v", config.AppConfig.PORT)
-	server.ListenAndServe()
+	log.Printf("Server will run on http://localhost:%v", config.AppConfig.PORT)
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Fatal("server err: ", err)
+	}
 }
 
 func setupRouter() *chi.Mux {
