@@ -20,4 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "NoteAI"
-include(":app")
+include(":frontend")

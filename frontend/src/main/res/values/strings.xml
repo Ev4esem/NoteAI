@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">MeetRecap</string>
+    <string name="pattern_study_title">Учеба</string>
+    <string name="pattern_work_title">Работа</string>
+    <string name="screen_main">main_screen</string>
+    <string name="screen_favourite">favourite_screen</string>
+    <string name="screen_note">note_screen</string>
+    <string name="tab_home">Записи</string>
+    <string name="tab_favourite">Избранное</string>
+
+    <!-- FavouriteScreen -->
+    <string name="favourite_title">Избранное экран</string>
+
+    <!-- NoteScreen -->
+    <string name="note_screen_edit">edit_note</string>
+    <string name="note_screen_back">back_to_previous</string>
+
+    <!-- MainScreen -->
+    <string name="title_main_screen">Домашний экран</string>
+    <string name="title_template">Шаблоны</string>
+    <string name="title_search_placeholder">Поиск</string>
+    <string name="copy">Copy</string>
+
+    <string name="note_save">save_note</string>
+
+    <string name="background_image">Background</string>
+
+    <!-- Route Parameters -->
+    <string name="note_id">note_id</string>
+
+    <!-- Toast Messages -->
+    <string name="audio_permission_error_message">Разрешите доступ к микрофону</string>
+
+    <!-- Icons Descriptions -->
+    <string name="description_search_icon">Поиск</string>
+    <string name="description_microphone_icon">Микрофон</string>
+    <string name="description_delete_icon">Удалить</string>
+    <string name="description_calendar_icon">Calendar</string>
+    <string name="description_clear_icon">Clear</string>
+    <string name="description_outline_icon">Outline</string>
+
+    <!-- Audio Recorder Permission Dialog -->
+    <string name="audio_permission_dialog_title">Разрешение на запись аудио</string>
+    <string name="audio_permission_dialog_text">Для записи аудио необходимо предоставить разрешение на использование микрофона.</string>
+    <string name="audio_permission_dialog_confirm_button">Запросить разрешение</string>
+    <string name="audio_permission_dialog_dismiss_button">Отмена</string>
+</resources>
